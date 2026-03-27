@@ -1488,7 +1488,7 @@ class StarTrail {
 }
 
 // ==========================================
-// MOBILE CAROUSEL - 手机端横向轮播
+// MOBILE CAROUSEL - 手机端纵向循环滚动
 // ==========================================
 class MobileCarousel {
     constructor() {
@@ -1497,7 +1497,6 @@ class MobileCarousel {
         if (!this.carousel) return;
 
         this.sections = Array.from(this.carousel.querySelectorAll('.section'));
-        // 过滤掉被隐藏的 section（如访客模式下的设置）
         this.visibleSections = this.sections.filter(s => {
             const style = window.getComputedStyle(s);
             return style.display !== 'none';
@@ -1505,18 +1504,16 @@ class MobileCarousel {
 
         if (this.visibleSections.length === 0) return;
 
-        this.activeIndex = 0;
+        this.centerIndex = 0;
         this.isExpanded = false;
+        this.touchStartY = 0;
+        this.touchDelta = 0;
+        this.isAnimating = false;
 
         this.createDots();
-        this.bindScroll();
+        this.applyLayout();
+        this.bindTouch();
         this.bindPanelClick();
-        this.updateActive();
-
-        // 初始滚动到第一个
-        setTimeout(() => {
-            this.visibleSections[0].scrollIntoView({ inline: 'center', behavior: 'instant' });
-        }, 100);
     }
 
     createDots() {
@@ -1528,8 +1525,8 @@ class MobileCarousel {
             const dot = document.createElement('div');
             dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
             dot.addEventListener('click', () => {
-                if (this.isExpanded) return;
-                this.visibleSections[i].scrollIntoView({ inline: 'center', behavior: 'smooth' });
+                if (this.isExpanded || this.isAnimating) return;
+                this.goTo(i);
             });
             this.dotsContainer.appendChild(dot);
             this.dots.push(dot);
@@ -1538,49 +1535,117 @@ class MobileCarousel {
         document.body.appendChild(this.dotsContainer);
     }
 
-    bindScroll() {
-        let scrollTimeout;
-        this.carousel.addEventListener('scroll', () => {
-            if (this.isExpanded) return;
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => this.updateActive(), 50);
-        }, { passive: true });
-    }
-
-    updateActive() {
+    // 核心：根据 centerIndex 计算每个卡片的位置、缩放、透明度、z-index
+    applyLayout() {
         if (this.isExpanded) return;
-        const carouselCenter = this.carousel.scrollLeft + this.carousel.offsetWidth / 2;
-        let closestIdx = 0;
-        let closestDist = Infinity;
+        const count = this.visibleSections.length;
+        const centerY = 120; // 中心卡片的 top 位置 (px from carousel top)
+        const gap = 70; // 每级间距
 
         this.visibleSections.forEach((sec, i) => {
-            const secCenter = sec.offsetLeft + sec.offsetWidth / 2;
-            const dist = Math.abs(carouselCenter - secCenter);
-            if (dist < closestDist) {
-                closestDist = dist;
-                closestIdx = i;
+            // 计算距离中心的环形距离（支持循环）
+            let diff = i - this.centerIndex;
+            // 循环：让距离始终取最短路径
+            if (diff > count / 2) diff -= count;
+            if (diff < -count / 2) diff += count;
+
+            const absDiff = Math.abs(diff);
+
+            // 缩放：中心=1，每远一级缩小0.12
+            const scale = Math.max(0.6, 1 - absDiff * 0.12);
+
+            // 透明度：中心=1，每远一级降低0.25
+            const opacity = Math.max(0.1, 1 - absDiff * 0.25);
+
+            // z-index：中心最高，越远越低
+            const zIndex = count * 10 - absDiff * 10;
+
+            // Y位移：中心在顶部，上方的往上偏移，下方的往下
+            const translateY = diff * gap;
+
+            sec.style.transform = `translateY(${translateY}px) scale(${scale})`;
+            sec.style.opacity = opacity;
+            sec.style.zIndex = zIndex;
+            sec.style.position = 'relative';
+
+            // 中心卡片标记
+            if (diff === 0) {
+                sec.classList.add('carousel-center');
+                this.triggerStripes(sec, true);
+            } else {
+                sec.classList.remove('carousel-center');
+                this.triggerStripes(sec, false);
             }
         });
 
-        if (closestIdx !== this.activeIndex || !this._initialized) {
-            this._initialized = true;
-            // 移除旧的 active
-            this.visibleSections.forEach(s => s.classList.remove('carousel-active'));
-            this.dots.forEach(d => d.classList.remove('active'));
+        // 更新指示点
+        this.dots.forEach((d, i) => {
+            d.classList.toggle('active', i === this.centerIndex);
+        });
+    }
 
-            // 设置新的 active
-            this.activeIndex = closestIdx;
-            this.visibleSections[closestIdx].classList.add('carousel-active');
-            this.dots[closestIdx].classList.add('active');
+    goTo(index) {
+        if (this.isAnimating) return;
+        this.isAnimating = true;
+        this.centerIndex = ((index % this.visibleSections.length) + this.visibleSections.length) % this.visibleSections.length;
+        this.applyLayout();
+        setTimeout(() => { this.isAnimating = false; }, 500);
+    }
 
-            // 触发条纹进场（模拟 mouseenter）
-            this.triggerStripes(this.visibleSections[closestIdx], true);
+    next() {
+        this.goTo(this.centerIndex + 1);
+    }
 
-            // 其他的触发退场
-            this.visibleSections.forEach((s, i) => {
-                if (i !== closestIdx) this.triggerStripes(s, false);
-            });
-        }
+    prev() {
+        this.goTo(this.centerIndex - 1);
+    }
+
+    bindTouch() {
+        let startY = 0;
+        let startX = 0;
+        let moved = false;
+
+        this.carousel.addEventListener('touchstart', (e) => {
+            if (this.isExpanded) return;
+            startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
+            moved = false;
+        }, { passive: true });
+
+        this.carousel.addEventListener('touchmove', (e) => {
+            if (this.isExpanded) return;
+            moved = true;
+        }, { passive: true });
+
+        this.carousel.addEventListener('touchend', (e) => {
+            if (this.isExpanded || !moved) return;
+            const endY = e.changedTouches[0].clientY;
+            const endX = e.changedTouches[0].clientX;
+            const dy = endY - startY;
+            const dx = endX - startX;
+
+            // 只响应垂直滑动（且垂直距离大于水平距离）
+            if (Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) {
+                if (dy < 0) {
+                    // 上滑 → 下一个
+                    this.next();
+                } else {
+                    // 下滑 → 上一个
+                    this.prev();
+                }
+            }
+        }, { passive: true });
+
+        // 鼠标滚轮（模拟器调试用）
+        this.carousel.addEventListener('wheel', (e) => {
+            if (this.isExpanded) return;
+            e.preventDefault();
+            if (e.deltaY > 0) {
+                this.next();
+            } else {
+                this.prev();
+            }
+        }, { passive: false });
     }
 
     triggerStripes(section, enter) {
@@ -1598,8 +1663,6 @@ class MobileCarousel {
             const panel = sec.querySelector('.section-panel');
             if (!panel) return;
 
-            const titleBar = panel.querySelector('.panel-title-bar');
-            // 监听展开/折叠变化
             const obs = new MutationObserver(() => {
                 const expanded = panel.classList.contains('expanded');
                 if (expanded && !this.isExpanded) {
@@ -1617,19 +1680,30 @@ class MobileCarousel {
         section.classList.add('section-expanded');
         this.carousel.classList.add('has-expanded');
         this.dotsContainer.style.display = 'none';
+
+        // 清除所有 section 的 inline style
+        this.visibleSections.forEach(s => {
+            if (!s.classList.contains('section-expanded')) {
+                s.style.display = 'none';
+            } else {
+                s.style.transform = '';
+                s.style.opacity = '';
+                s.style.zIndex = '';
+            }
+        });
     }
 
     exitExpanded() {
         this.isExpanded = false;
-        this.visibleSections.forEach(s => s.classList.remove('section-expanded'));
+        this.visibleSections.forEach(s => {
+            s.classList.remove('section-expanded');
+            s.style.display = '';
+        });
         this.carousel.classList.remove('has-expanded');
         this.dotsContainer.style.display = '';
 
-        // 恢复滚动位置到之前激活的卡片
-        setTimeout(() => {
-            this.visibleSections[this.activeIndex]?.scrollIntoView({ inline: 'center', behavior: 'smooth' });
-            this.updateActive();
-        }, 100);
+        // 重新布局
+        setTimeout(() => this.applyLayout(), 50);
     }
 }
 
