@@ -1334,6 +1334,11 @@ function showGuestBanner() {
             banner.remove();
             // 重新渲染以显示删除按钮
             const fm = new FileManager();
+            // 登录后重建手机端轮播，将设置面板加入滚动队列
+            if (window.innerWidth <= 768 && window._mobileCarousel) {
+                window._mobileCarousel.destroy();
+                window._mobileCarousel = new MobileCarousel();
+            }
         });
     });
 }
@@ -1718,6 +1723,21 @@ class MobileCarousel {
         // 重新布局
         setTimeout(() => this.applyLayout(), 50);
     }
+
+    destroy() {
+        // 清理指示点
+        if (this.dotsContainer) this.dotsContainer.remove();
+        // 清理 section 上的 inline style 和 class
+        this.visibleSections.forEach(s => {
+            s.classList.remove('carousel-center', 'section-expanded');
+            s.style.transform = '';
+            s.style.opacity = '';
+            s.style.zIndex = '';
+            s.style.position = '';
+            s.style.display = '';
+        });
+        this.carousel.classList.remove('has-expanded');
+    }
 }
 
 function bootApp() {
@@ -1732,7 +1752,7 @@ function bootApp() {
     new BGMPlayer();
     new Settings(ps);
     new GlitchEngine();
-    new MobileCarousel();
+    window._mobileCarousel = new MobileCarousel();
     bindGlobalSfx();
 }
 
