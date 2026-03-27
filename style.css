@@ -272,7 +272,7 @@ body:not(.logged-in) #main-nav {
 
 /* === SECTIONS === */
 .section { position:relative; z-index:1; min-height:auto; padding:0; margin:0; line-height:0; }
-.section:first-of-type { padding-top: 70px; }
+.section:first-of-type { padding-top: 130px; }
 .section-inner { max-width:1200px; margin:0 auto; padding: 40px 48px 40px; }
 .section-header { text-align:center; margin-bottom:60px; }
 .section-tag { display:inline-flex; align-items:center; gap:10px; font-family:var(--font-d); font-size:9px; letter-spacing:4px; color:var(--t4); margin-bottom:20px; }
@@ -631,7 +631,7 @@ body:not(.logged-in) #main-nav {
     .cursor-light { display:none; }
     .side-ind { display:none; }
     .section { padding:0; }
-    .section:first-of-type { padding-top: 56px; }
+    .section:first-of-type { padding-top: 110px; }
     .section-inner { padding: 16px 12px; }
     .nav-center { display:none; }
     .nav-menu-btn { display:flex; }
@@ -706,7 +706,7 @@ body:not(.logged-in) #main-nav {
 }
 @media(max-width:480px) {
     .dash-stats { grid-template-columns:1fr; }
-    .section:first-of-type { padding-top: 50px; }
+    .section:first-of-type { padding-top: 100px; }
     .panel-title-bar { height:48px; padding:8px 12px; }
     .panel-title { font-size:13px; }
     .section-panel.expanded .panel-title-bar { height:52px; }
@@ -817,6 +817,21 @@ body:not(.logged-in) .profile-fields {
     opacity: 0.5;
     pointer-events: none;
     position: relative;
+}
+
+/* 访客模式下隐藏设置栏目 */
+body:not(.logged-in) #settings {
+    display: none !important;
+}
+
+/* 访客模式下隐藏导航栏中的设置链接 */
+body:not(.logged-in) .nav-link[data-section="settings"] {
+    display: none !important;
+}
+
+/* 访客模式下隐藏手机菜单中的设置链接 */
+body:not(.logged-in) .mobile-link[data-section="settings"] {
+    display: none !important;
 }
 
 body:not(.logged-in) .upload-area::after,
@@ -1150,7 +1165,7 @@ body.logged-in {
    ========================================= */
 .section-panel {
     position: relative;
-    margin: 2px auto;
+    margin: 30px auto;
     border-radius: 8px;
     overflow: visible;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1159,15 +1174,15 @@ body.logged-in {
 }
 
 @media (max-width: 900px) {
-    .section-panel { width: calc(100% - 24px); margin: 2px auto; }
+    .section-panel { width: calc(100% - 24px); margin: 30px auto; }
 }
 
 @media (max-width: 600px) {
-    .section-panel { width: calc(100% - 12px); margin: 1px auto; }
+    .section-panel { width: calc(100% - 12px); margin: 24px auto; }
 }
 
 .section-panel.expanded {
-    margin: 16px auto;
+    margin: 30px auto;
 }
 
 /* === 标题栏 - 黑底黄字 === */
