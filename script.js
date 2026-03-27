@@ -1654,7 +1654,7 @@ class StarTrail {
 }
 
 // ==========================================
-// MOBILE CAROUSEL - 手机端纵向列表轮播
+// MOBILE CAROUSEL - LOL皮肤选择器风格纵向轮播
 // ==========================================
 class MobileCarousel {
     constructor() {
@@ -1663,10 +1663,11 @@ class MobileCarousel {
         if (!this.carousel) return;
         this.active = true;
 
-        this.sections = Array.from(this.carousel.querySelectorAll('.section'));
-        this.visibleSections = this.sections.filter(s => {
-            const style = window.getComputedStyle(s);
-            return style.display !== 'none';
+        // 获取所有 section（包括新增的）
+        const allSections = Array.from(this.carousel.querySelectorAll(':scope > .section'));
+        // 过滤隐藏的（如访客模式下的设置）
+        this.visibleSections = allSections.filter(s => {
+            return getComputedStyle(s).display !== 'none';
         });
 
         if (this.visibleSections.length === 0) return;
@@ -1674,17 +1675,28 @@ class MobileCarousel {
         this.centerIndex = 0;
         this.isExpanded = false;
         this.isAnimating = false;
-        this.MAX_VISIBLE = 5;
+        this.MAX_SHOW = 5;
+        this.CARD_H = 68;   // 每张卡片占位高度
+        this.CENTER_Y = 0;  // 中心卡片的 top，稍后计算
 
-        // 阻止默认滚动，完全由轮播接管
-        this.carousel.style.overflow = 'hidden';
-
+        this.calcCenterY();
         this.createDots();
         this.applyLayout();
         this.bindTouch();
         this.bindPanelClick();
 
-        console.log('[Carousel] init with', this.visibleSections.length, 'sections');
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) return;
+            this.calcCenterY();
+            this.applyLayout();
+        });
+    }
+
+    calcCenterY() {
+        // 中心卡片放在屏幕中间偏上
+        const vh = window.innerHeight;
+        const navH = 48 + (document.body.classList.contains('logged-in') ? 0 : 40); // nav + 横幅
+        this.CENTER_Y = navH + (vh - navH) * 0.35;
     }
 
     createDots() {
@@ -1706,49 +1718,48 @@ class MobileCarousel {
         document.body.appendChild(this.dotsContainer);
     }
 
-    // 列表轮播布局：最多显示5个，中心最大，到头停止
+    // LOL皮肤选择器风格：绝对定位，用 top 控制纵向位置
     applyLayout() {
         if (this.isExpanded) return;
         const count = this.visibleSections.length;
-        const halfVisible = Math.floor(this.MAX_VISIBLE / 2); // 2
-        const gap = 76;
+        const half = Math.floor(this.MAX_SHOW / 2);
 
         this.visibleSections.forEach((sec, i) => {
-            // 列表距离（非环形）
-            const diff = i - this.centerIndex;
+            const diff = i - this.centerIndex; // 列表距离，非环形
             const absDiff = Math.abs(diff);
 
-            // 超出显示窗口的隐藏
-            if (absDiff > halfVisible) {
-                sec.style.display = 'none';
+            // 超出窗口的隐藏
+            if (absDiff > half) {
+                sec.style.visibility = 'hidden';
+                sec.style.opacity = '0';
+                sec.style.pointerEvents = 'none';
                 sec.classList.remove('carousel-center');
-                this.triggerStripes(sec, false);
                 return;
             }
 
-            // 显示
-            sec.style.display = '';
-            sec.style.position = 'relative';
+            sec.style.visibility = 'visible';
+            sec.style.pointerEvents = diff === 0 ? 'auto' : 'none';
 
-            // 缩放：中心=1，每远一级缩小
+            // top 位置：中心在 CENTER_Y，上下偏移
+            const top = this.CENTER_Y + diff * this.CARD_H;
+
+            // 缩放：中心1.0，每级缩小0.06
             const scale = 1 - absDiff * 0.06;
 
-            // 透明度：中心=1，阶梯递减
+            // 透明度：中心1.0，相邻0.5，边缘0.2
             const opacity = absDiff === 0 ? 1 :
-                            absDiff === 1 ? 0.55 :
-                            0.25;
+                            absDiff === 1 ? 0.5 :
+                            0.2;
 
             // z-index：中心最高
             const zIndex = 100 - absDiff * 10;
 
-            // Y位移
-            const translateY = diff * gap;
-
-            sec.style.transform = `translateY(${translateY}px) scale(${scale})`;
+            sec.style.top = top + 'px';
+            sec.style.transform = `scale(${scale})`;
             sec.style.opacity = opacity;
             sec.style.zIndex = zIndex;
 
-            // 中心卡片
+            // 中心标记
             if (diff === 0) {
                 if (!sec.classList.contains('carousel-center')) {
                     sec.classList.add('carousel-center');
@@ -1762,38 +1773,27 @@ class MobileCarousel {
             }
         });
 
-        // 更新指示点
+        // 指示点
         if (this.dots) {
-            this.dots.forEach((d, i) => {
-                d.classList.toggle('active', i === this.centerIndex);
-            });
+            this.dots.forEach((d, i) => d.classList.toggle('active', i === this.centerIndex));
         }
     }
 
     goTo(index) {
         if (this.isAnimating) return;
-        const count = this.visibleSections.length;
-        // 列表模式：不循环，到头就停
-        const clamped = Math.max(0, Math.min(count - 1, index));
+        const clamped = Math.max(0, Math.min(this.visibleSections.length - 1, index));
         if (clamped === this.centerIndex) return;
         this.isAnimating = true;
         this.centerIndex = clamped;
         this.applyLayout();
-        setTimeout(() => { this.isAnimating = false; }, 400);
+        setTimeout(() => { this.isAnimating = false; }, 350);
     }
 
-    next() {
-        this.goTo(this.centerIndex + 1);
-    }
-
-    prev() {
-        this.goTo(this.centerIndex - 1);
-    }
+    next() { this.goTo(this.centerIndex + 1); }
+    prev() { this.goTo(this.centerIndex - 1); }
 
     bindTouch() {
-        let startY = 0;
-        let startX = 0;
-        let moved = false;
+        let startY = 0, startX = 0, moved = false;
 
         this.carousel.addEventListener('touchstart', (e) => {
             if (this.isExpanded) return;
@@ -1805,25 +1805,21 @@ class MobileCarousel {
         this.carousel.addEventListener('touchmove', (e) => {
             if (this.isExpanded) return;
             moved = true;
-        }, { passive: true });
+            // 阻止页面默认滚动
+            if (!this.isExpanded) e.preventDefault();
+        }, { passive: false });
 
         this.carousel.addEventListener('touchend', (e) => {
             if (this.isExpanded || !moved) return;
-            const endY = e.changedTouches[0].clientY;
-            const endX = e.changedTouches[0].clientX;
-            const dy = endY - startY;
-            const dx = endX - startX;
+            const dy = e.changedTouches[0].clientY - startY;
+            const dx = e.changedTouches[0].clientX - startX;
 
             if (Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) {
-                if (dy < 0) {
-                    this.next(); // 上滑 → 下一个
-                } else {
-                    this.prev(); // 下滑 → 上一个
-                }
+                if (dy < 0) this.next();
+                else this.prev();
             }
         }, { passive: true });
 
-        // 鼠标滚轮
         this.carousel.addEventListener('wheel', (e) => {
             if (this.isExpanded) return;
             e.preventDefault();
@@ -1835,25 +1831,17 @@ class MobileCarousel {
     triggerStripes(section, enter) {
         const bar = section.querySelector('.panel-title-bar');
         if (!bar) return;
-        if (enter) {
-            bar.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-        } else {
-            bar.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-        }
+        bar.dispatchEvent(new MouseEvent(enter ? 'mouseenter' : 'mouseleave', { bubbles: true }));
     }
 
     bindPanelClick() {
         this.visibleSections.forEach(sec => {
             const panel = sec.querySelector('.section-panel');
             if (!panel) return;
-
             const obs = new MutationObserver(() => {
                 const expanded = panel.classList.contains('expanded');
-                if (expanded && !this.isExpanded) {
-                    this.enterExpanded(sec);
-                } else if (!expanded && this.isExpanded) {
-                    this.exitExpanded();
-                }
+                if (expanded && !this.isExpanded) this.enterExpanded(sec);
+                else if (!expanded && this.isExpanded) this.exitExpanded();
             });
             obs.observe(panel, { attributes: true, attributeFilter: ['class'] });
         });
@@ -1863,27 +1851,18 @@ class MobileCarousel {
         this.isExpanded = true;
         section.classList.add('section-expanded');
         this.carousel.classList.add('has-expanded');
-        this.dotsContainer.style.display = 'none';
-
-        this.visibleSections.forEach(s => {
-            if (!s.classList.contains('section-expanded')) {
-                s.style.display = 'none';
-            } else {
-                s.style.transform = '';
-                s.style.opacity = '';
-                s.style.zIndex = '';
-            }
-        });
+        if (this.dotsContainer) this.dotsContainer.style.display = 'none';
     }
 
     exitExpanded() {
         this.isExpanded = false;
         this.visibleSections.forEach(s => {
             s.classList.remove('section-expanded');
-            s.style.display = '';
+            s.style.visibility = '';
+            s.style.pointerEvents = '';
         });
         this.carousel.classList.remove('has-expanded');
-        this.dotsContainer.style.display = '';
+        if (this.dotsContainer) this.dotsContainer.style.display = '';
         setTimeout(() => this.applyLayout(), 50);
     }
 
@@ -1891,11 +1870,12 @@ class MobileCarousel {
         if (this.dotsContainer) this.dotsContainer.remove();
         this.visibleSections.forEach(s => {
             s.classList.remove('carousel-center', 'section-expanded');
+            s.style.top = '';
             s.style.transform = '';
             s.style.opacity = '';
             s.style.zIndex = '';
-            s.style.position = '';
-            s.style.display = '';
+            s.style.visibility = '';
+            s.style.pointerEvents = '';
         });
         this.carousel.classList.remove('has-expanded');
         this.carousel.style.overflow = '';
