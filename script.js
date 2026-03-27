@@ -363,19 +363,26 @@ class InteractiveEffects {
                 const bw = getBarWidth();
                 const isMobile = window.innerWidth <= 768;
                 const totalSpace = bw * STRIPE_FILL;
-                const count = Math.max(6, Math.min(20, Math.round(totalSpace / DENSITY)));
                 container.innerHTML = ''; stripes = []; finalPos = [];
+
+                // 手机端：只保留最右侧一根条纹
+                if (isMobile) {
+                    const w = MAX_W + 20;
+                    const tx = bw - w + 20;
+                    finalPos.push({ tx, w });
+                    const el = document.createElement('span'); el.className = 'hazard-stripe';
+                    el.style.width = w + 'px'; container.appendChild(el);
+                    stripes.push({ el, arrived: false, opacity: 1 });
+                    return;
+                }
+
+                const count = Math.max(6, Math.min(20, Math.round(totalSpace / DENSITY)));
                 const widths = [], gaps = [];
                 for (let i = 0; i < count; i++) { const t = i / Math.max(count - 1, 1); widths.push(MAX_W - t * (MAX_W - MIN_W)); }
-                // 手机端：间隔为0，条纹合拢
-                if (isMobile) {
-                    for (let i = 0; i < count; i++) gaps.push(0);
-                } else {
-                    for (let i = 0; i < count; i++) gaps.push(widths[count - 1 - i]);
-                }
+                for (let i = 0; i < count; i++) gaps.push(widths[count - 1 - i]);
                 const rawTotal = widths.reduce((a, b) => a + b, 0) + gaps.reduce((a, b) => a + b, 0);
                 const sc = totalSpace / rawTotal;
-                const sW = widths.map(w => Math.max(2, w * sc)), sG = gaps.map(g => g * sc);
+                const sW = widths.map(w => Math.max(2, w * sc)), sG = gaps.map(g => Math.max(1, g * sc));
                 let cr = 0;
                 for (let i = 0; i < count; i++) {
                     let w = sW[i], tx;
