@@ -650,7 +650,7 @@ class Nav {
         if (y > this.lastY && y > 100) this.nav.classList.add('nav-hide');
         else this.nav.classList.remove('nav-hide');
         this.lastY = y;
-        const secs = ['dashboard', 'uploads', 'profile', 'settings'];
+        const secs = ['dashboard', 'uploads', 'profile', 'settings', 'notes', 'bookmarks', 'journal'];
         let cur = 'dashboard';
         secs.forEach(id => { const el = document.getElementById(id); if (el && y >= el.offsetTop - 200) cur = id; });
         this.links.forEach(l => l.classList.toggle('active', l.getAttribute('data-section') === cur));
@@ -1257,6 +1257,154 @@ class GlitchEngine {
 }
 
 // ==========================================
+// NOTES - 笔记模块
+// ==========================================
+class Notes {
+    constructor() {
+        this.content = Store.get('notes', '');
+        const textarea = document.getElementById('notes-content');
+        const saveBtn = document.getElementById('save-notes-btn');
+        if (textarea) textarea.value = this.content;
+        saveBtn?.addEventListener('click', () => {
+            this.content = textarea.value;
+            Store.set('notes', this.content);
+            sfx.play('success');
+            toast('笔记已保存', 'success');
+        });
+    }
+}
+
+// ==========================================
+// BOOKMARKS - 书签模块
+// ==========================================
+class Bookmarks {
+    constructor() {
+        this.items = Store.get('bookmarks', []);
+        this.render();
+        document.getElementById('add-bookmark-btn')?.addEventListener('click', () => this.add());
+    }
+
+    add() {
+        const title = document.getElementById('bookmark-title').value.trim();
+        const url = document.getElementById('bookmark-url').value.trim();
+        if (!url) { toast('请输入链接', 'error'); sfx.play('error'); return; }
+        sfx.play('success');
+        this.items.unshift({
+            id: Date.now().toString(36),
+            title: title || url,
+            url: url,
+            date: new Date().toISOString()
+        });
+        Store.set('bookmarks', this.items);
+        document.getElementById('bookmark-title').value = '';
+        document.getElementById('bookmark-url').value = '';
+        this.render();
+        toast('书签已添加', 'success');
+    }
+
+    remove(id) {
+        sfx.play('delete');
+        this.items = this.items.filter(b => b.id !== id);
+        Store.set('bookmarks', this.items);
+        this.render();
+        toast('书签已删除', 'info');
+    }
+
+    render() {
+        const el = document.getElementById('bookmarks-list');
+        if (!el) return;
+        if (this.items.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔗</div><p>还没有收藏书签</p></div>';
+            return;
+        }
+        el.innerHTML = this.items.map(b => `
+            <div class="file-item" style="cursor:pointer;" onclick="window.open('${b.url}','_blank')">
+                <div class="fi-icon">🔗</div>
+                <div class="fi-info">
+                    <div class="fi-name">${this._esc(b.title)}</div>
+                    <div class="fi-meta">${this._esc(b.url)}</div>
+                </div>
+                <div class="fi-actions">
+                    <button class="fi-btn fi-del delete" data-bmid="${b.id}" title="删除" onclick="event.stopPropagation()">🗑</button>
+                </div>
+            </div>
+        `).join('');
+        el.querySelectorAll('.fi-del').forEach(btn => {
+            btn.addEventListener('click', () => this.remove(btn.dataset.bmid));
+        });
+    }
+
+    _esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+}
+
+// ==========================================
+// JOURNAL - 日志模块
+// ==========================================
+class Journal {
+    constructor() {
+        this.entries = Store.get('journal', []);
+        this.render();
+        document.getElementById('add-journal-btn')?.addEventListener('click', () => this.add());
+    }
+
+    add() {
+        const title = document.getElementById('journal-title').value.trim();
+        const content = document.getElementById('journal-content').value.trim();
+        if (!content) { toast('请输入日志内容', 'error'); sfx.play('error'); return; }
+        sfx.play('success');
+        const now = new Date();
+        this.entries.unshift({
+            id: Date.now().toString(36),
+            title: title || now.toLocaleDateString('zh-CN'),
+            content: content,
+            date: now.toISOString()
+        });
+        Store.set('journal', this.entries);
+        document.getElementById('journal-title').value = '';
+        document.getElementById('journal-content').value = '';
+        this.render();
+        toast('日志已记录', 'success');
+    }
+
+    remove(id) {
+        sfx.play('delete');
+        this.entries = this.entries.filter(e => e.id !== id);
+        Store.set('journal', this.entries);
+        this.render();
+        toast('日志已删除', 'info');
+    }
+
+    render() {
+        const el = document.getElementById('journal-entries');
+        if (!el) return;
+        if (this.entries.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="empty-icon">📔</div><p>还没有日志记录</p></div>';
+            return;
+        }
+        el.innerHTML = this.entries.map(e => {
+            const d = new Date(e.date);
+            const dateStr = `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+            return `
+            <div class="glass-card" style="padding:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div>
+                        <span style="font-weight:600; font-size:15px;">${this._esc(e.title)}</span>
+                        <span style="font-size:11px; color:var(--t4); margin-left:12px; font-family:var(--font-m);">${dateStr}</span>
+                    </div>
+                    <button class="fi-btn fi-del delete" data-jid="${e.id}" title="删除" style="flex-shrink:0;">🗑</button>
+                </div>
+                <div style="font-size:14px; color:var(--t2); line-height:1.8; white-space:pre-wrap;">${this._esc(e.content)}</div>
+            </div>`;
+        }).join('');
+        el.querySelectorAll('.fi-del').forEach(btn => {
+            btn.addEventListener('click', () => this.remove(btn.dataset.jid));
+        });
+    }
+
+    _esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+}
+
+// ==========================================
 // SFX BINDING — hover & click sounds
 // ==========================================
 function bindGlobalSfx() {
@@ -1553,32 +1701,43 @@ class MobileCarousel {
         document.body.appendChild(this.dotsContainer);
     }
 
-    // 核心：根据 centerIndex 计算每个卡片的位置、缩放、透明度、z-index
+    // 核心：最多显示5个，中心最大最亮，距离越远越透明，超出隐藏
     applyLayout() {
         if (this.isExpanded) return;
         const count = this.visibleSections.length;
-        const centerY = 120; // 中心卡片的 top 位置 (px from carousel top)
-        const gap = 70; // 每级间距
+        const MAX_VISIBLE = 5;
+        const halfVisible = Math.floor(MAX_VISIBLE / 2); // 2
+        const gap = 74; // 每级间距
 
         this.visibleSections.forEach((sec, i) => {
-            // 计算距离中心的环形距离（支持循环）
+            // 计算环形距离
             let diff = i - this.centerIndex;
-            // 循环：让距离始终取最短路径
             if (diff > count / 2) diff -= count;
             if (diff < -count / 2) diff += count;
 
             const absDiff = Math.abs(diff);
 
-            // 缩放：中心=1，每远一级缩小0.12
-            const scale = Math.max(0.6, 1 - absDiff * 0.12);
+            // 超出显示范围的隐藏
+            if (absDiff > halfVisible) {
+                sec.style.display = 'none';
+                sec.classList.remove('carousel-center');
+                return;
+            }
 
-            // 透明度：中心=1，每远一级降低0.25
-            const opacity = Math.max(0.1, 1 - absDiff * 0.25);
+            sec.style.display = '';
 
-            // z-index：中心最高，越远越低
-            const zIndex = count * 10 - absDiff * 10;
+            // 缩放：中心=1，每远一级缩小0.08
+            const scale = Math.max(0.7, 1 - absDiff * 0.08);
 
-            // Y位移：中心在顶部，上方的往上偏移，下方的往下
+            // 透明度：中心=1，每远一级降低
+            const opacity = absDiff === 0 ? 1 :
+                            absDiff === 1 ? 0.6 :
+                            0.3;
+
+            // z-index：中心最高
+            const zIndex = 100 - absDiff * 10;
+
+            // Y位移
             const translateY = diff * gap;
 
             sec.style.transform = `translateY(${translateY}px) scale(${scale})`;
@@ -1752,6 +1911,9 @@ function bootApp() {
     new BGMPlayer();
     new Settings(ps);
     new GlitchEngine();
+    new Notes();
+    new Bookmarks();
+    new Journal();
     window._mobileCarousel = new MobileCarousel();
     bindGlobalSfx();
 }

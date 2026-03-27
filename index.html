@@ -160,6 +160,9 @@
             <a href="#uploads" class="nav-link" data-section="uploads"><span class="nl-idx">02</span><span class="nl-txt">内容库</span></a>
             <a href="#profile" class="nav-link" data-section="profile"><span class="nl-idx">03</span><span class="nl-txt">资料</span></a>
             <a href="#settings" class="nav-link" data-section="settings"><span class="nl-idx">04</span><span class="nl-txt">设置</span></a>
+            <a href="#notes" class="nav-link" data-section="notes"><span class="nl-idx">05</span><span class="nl-txt">笔记</span></a>
+            <a href="#bookmarks" class="nav-link" data-section="bookmarks"><span class="nl-idx">06</span><span class="nl-txt">书签</span></a>
+            <a href="#journal" class="nav-link" data-section="journal"><span class="nl-idx">07</span><span class="nl-txt">日志</span></a>
         </div>
         <div class="nav-right">
             <div class="nav-music-ctrl" id="music-toggle" title="背景音乐">
@@ -186,6 +189,9 @@
             <a href="#uploads" class="mobile-link" data-section="uploads"><span class="ml-idx">02</span><span class="ml-txt">内容库</span></a>
             <a href="#profile" class="mobile-link" data-section="profile"><span class="ml-idx">03</span><span class="ml-txt">资料</span></a>
             <a href="#settings" class="mobile-link" data-section="settings"><span class="ml-idx">04</span><span class="ml-txt">设置</span></a>
+            <a href="#notes" class="mobile-link" data-section="notes"><span class="ml-idx">05</span><span class="ml-txt">笔记</span></a>
+            <a href="#bookmarks" class="mobile-link" data-section="bookmarks"><span class="ml-idx">06</span><span class="ml-txt">书签</span></a>
+            <a href="#journal" class="mobile-link" data-section="journal"><span class="ml-idx">07</span><span class="ml-txt">日志</span></a>
         </div>
     </div>
 
@@ -632,6 +638,121 @@
                 </div>
             </div>
             </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CUSTOM BLOCK 1: 笔记 ===== -->
+    <section id="notes" class="section notes-section">
+        <div class="section-panel collapsed" id="notes-panel">
+            <div class="panel-title-bar" data-section="notes">
+                <div class="mech-latch"></div>
+                <div class="mech-latch-top"></div>
+                <div class="mech-latch-bottom"></div>
+                <div class="panel-hazard-line"></div>
+                <div class="panel-hazard-stack"></div>
+                <span class="panel-idx">05</span>
+                <h2 class="panel-title" contenteditable="true" spellcheck="false">笔记</h2>
+                <span class="panel-arrow">▶</span>
+            </div>
+            <div class="panel-body">
+                <div class="section-inner">
+                    <div class="section-header">
+                        <div class="section-tag"><span class="tag-line"></span><span>SECTION::05</span></div>
+                        <h2 class="section-title">笔记</h2>
+                        <p class="section-desc">NOTES // QUICK THOUGHTS</p>
+                    </div>
+                    <div class="custom-block-content glass-card" style="padding:32px;">
+                        <textarea id="notes-content" class="editor-textarea" placeholder="在这里随手记录想法、灵感、待办事项..." style="min-height:200px; background:var(--bg-2); border:1px solid var(--border); color:var(--t2); font-size:14px; line-height:1.8; width:100%; padding:16px; outline:none; resize:vertical;"></textarea>
+                        <div style="display:flex; justify-content:flex-end; margin-top:16px; gap:12px;">
+                            <button class="btn btn-accent btn-sm" id="save-notes-btn">
+                                <span class="btn-bg"></span><span class="btn-text">保存笔记</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CUSTOM BLOCK 2: 书签 ===== -->
+    <section id="bookmarks" class="section bookmarks-section">
+        <div class="section-panel collapsed" id="bookmarks-panel">
+            <div class="panel-title-bar" data-section="bookmarks">
+                <div class="mech-latch"></div>
+                <div class="mech-latch-top"></div>
+                <div class="mech-latch-bottom"></div>
+                <div class="panel-hazard-line"></div>
+                <div class="panel-hazard-stack"></div>
+                <span class="panel-idx">06</span>
+                <h2 class="panel-title" contenteditable="true" spellcheck="false">书签</h2>
+                <span class="panel-arrow">▶</span>
+            </div>
+            <div class="panel-body">
+                <div class="section-inner">
+                    <div class="section-header">
+                        <div class="section-tag"><span class="tag-line"></span><span>SECTION::06</span></div>
+                        <h2 class="section-title">书签</h2>
+                        <p class="section-desc">BOOKMARKS // SAVED LINKS</p>
+                    </div>
+                    <div class="custom-block-content glass-card" style="padding:32px;">
+                        <div id="bookmarks-list" style="display:flex; flex-direction:column; gap:12px;">
+                            <div class="empty-state">
+                                <div class="empty-icon">🔗</div>
+                                <p>还没有收藏书签</p>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px; margin-top:20px; align-items:center;">
+                            <input type="text" id="bookmark-title" class="pf-input" placeholder="标题" style="flex:1; border-bottom:1px solid var(--border); padding:10px 0;">
+                            <input type="url" id="bookmark-url" class="pf-input" placeholder="https://..." style="flex:2; border-bottom:1px solid var(--border); padding:10px 0;">
+                            <button class="btn btn-accent btn-sm" id="add-bookmark-btn">
+                                <span class="btn-bg"></span><span class="btn-text">添加</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CUSTOM BLOCK 3: 日志 ===== -->
+    <section id="journal" class="section journal-section">
+        <div class="section-panel collapsed" id="journal-panel">
+            <div class="panel-title-bar" data-section="journal">
+                <div class="mech-latch"></div>
+                <div class="mech-latch-top"></div>
+                <div class="mech-latch-bottom"></div>
+                <div class="panel-hazard-line"></div>
+                <div class="panel-hazard-stack"></div>
+                <span class="panel-idx">07</span>
+                <h2 class="panel-title" contenteditable="true" spellcheck="false">日志</h2>
+                <span class="panel-arrow">▶</span>
+            </div>
+            <div class="panel-body">
+                <div class="section-inner">
+                    <div class="section-header">
+                        <div class="section-tag"><span class="tag-line"></span><span>SECTION::07</span></div>
+                        <h2 class="section-title">日志</h2>
+                        <p class="section-desc">JOURNAL // DAILY LOG</p>
+                    </div>
+                    <div class="custom-block-content glass-card" style="padding:32px;">
+                        <div id="journal-entries" style="display:flex; flex-direction:column; gap:16px;">
+                            <div class="empty-state">
+                                <div class="empty-icon">📔</div>
+                                <p>还没有日志记录</p>
+                            </div>
+                        </div>
+                        <div style="margin-top:20px; display:flex; flex-direction:column; gap:12px;">
+                            <input type="text" id="journal-title" class="pf-input" placeholder="日志标题..." style="border-bottom:1px solid var(--border); padding:10px 0;">
+                            <textarea id="journal-content" class="editor-textarea" placeholder="今天发生了什么..." style="min-height:120px; background:var(--bg-2); border:1px solid var(--border); color:var(--t2); font-size:14px; line-height:1.8; width:100%; padding:16px; outline:none; resize:vertical;"></textarea>
+                            <div style="display:flex; justify-content:flex-end;">
+                                <button class="btn btn-accent btn-sm" id="add-journal-btn">
+                                    <span class="btn-bg"></span><span class="btn-text">记录日志</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
