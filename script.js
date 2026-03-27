@@ -379,7 +379,7 @@ class InteractiveEffects {
                 for (let i = 0; i < count; i++) {
                     const el = document.createElement('span'); el.className = 'hazard-stripe';
                     el.style.width = finalPos[i].w + 'px'; container.appendChild(el);
-                    stripes.push({ el, arrived: false, opacity: 1 - (i / count) * 0.7 });
+                    stripes.push({ el, arrived: false, opacity: 1 - (i / count) * 0.9 });
                 }
             }
             buildStripes();
