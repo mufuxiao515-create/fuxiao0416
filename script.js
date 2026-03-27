@@ -361,15 +361,21 @@ class InteractiveEffects {
             function getBarWidth() { return bar.offsetWidth || 1200; }
             function buildStripes() {
                 const bw = getBarWidth();
+                const isMobile = window.innerWidth <= 768;
                 const totalSpace = bw * STRIPE_FILL;
                 const count = Math.max(6, Math.min(20, Math.round(totalSpace / DENSITY)));
                 container.innerHTML = ''; stripes = []; finalPos = [];
                 const widths = [], gaps = [];
                 for (let i = 0; i < count; i++) { const t = i / Math.max(count - 1, 1); widths.push(MAX_W - t * (MAX_W - MIN_W)); }
-                for (let i = 0; i < count; i++) gaps.push(widths[count - 1 - i]);
+                // 手机端：间隔为0，条纹合拢
+                if (isMobile) {
+                    for (let i = 0; i < count; i++) gaps.push(0);
+                } else {
+                    for (let i = 0; i < count; i++) gaps.push(widths[count - 1 - i]);
+                }
                 const rawTotal = widths.reduce((a, b) => a + b, 0) + gaps.reduce((a, b) => a + b, 0);
                 const sc = totalSpace / rawTotal;
-                const sW = widths.map(w => Math.max(2, w * sc)), sG = gaps.map(g => Math.max(1, g * sc));
+                const sW = widths.map(w => Math.max(2, w * sc)), sG = gaps.map(g => g * sc);
                 let cr = 0;
                 for (let i = 0; i < count; i++) {
                     let w = sW[i], tx;
