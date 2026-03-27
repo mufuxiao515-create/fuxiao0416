@@ -1487,6 +1487,152 @@ class StarTrail {
     }
 }
 
+// ==========================================
+// MOBILE CAROUSEL - 手机端横向轮播
+// ==========================================
+class MobileCarousel {
+    constructor() {
+        if (window.innerWidth > 768) return;
+        this.carousel = document.getElementById('mobile-carousel');
+        if (!this.carousel) return;
+
+        this.sections = Array.from(this.carousel.querySelectorAll('.section'));
+        // 过滤掉被隐藏的 section（如访客模式下的设置）
+        this.visibleSections = this.sections.filter(s => {
+            const style = window.getComputedStyle(s);
+            return style.display !== 'none';
+        });
+
+        if (this.visibleSections.length === 0) return;
+
+        this.activeIndex = 0;
+        this.isExpanded = false;
+
+        this.createDots();
+        this.bindScroll();
+        this.bindPanelClick();
+        this.updateActive();
+
+        // 初始滚动到第一个
+        setTimeout(() => {
+            this.visibleSections[0].scrollIntoView({ inline: 'center', behavior: 'instant' });
+        }, 100);
+    }
+
+    createDots() {
+        this.dotsContainer = document.createElement('div');
+        this.dotsContainer.className = 'carousel-dots';
+        this.dots = [];
+
+        this.visibleSections.forEach((_, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+            dot.addEventListener('click', () => {
+                if (this.isExpanded) return;
+                this.visibleSections[i].scrollIntoView({ inline: 'center', behavior: 'smooth' });
+            });
+            this.dotsContainer.appendChild(dot);
+            this.dots.push(dot);
+        });
+
+        document.body.appendChild(this.dotsContainer);
+    }
+
+    bindScroll() {
+        let scrollTimeout;
+        this.carousel.addEventListener('scroll', () => {
+            if (this.isExpanded) return;
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => this.updateActive(), 50);
+        }, { passive: true });
+    }
+
+    updateActive() {
+        if (this.isExpanded) return;
+        const carouselCenter = this.carousel.scrollLeft + this.carousel.offsetWidth / 2;
+        let closestIdx = 0;
+        let closestDist = Infinity;
+
+        this.visibleSections.forEach((sec, i) => {
+            const secCenter = sec.offsetLeft + sec.offsetWidth / 2;
+            const dist = Math.abs(carouselCenter - secCenter);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closestIdx = i;
+            }
+        });
+
+        if (closestIdx !== this.activeIndex || !this._initialized) {
+            this._initialized = true;
+            // 移除旧的 active
+            this.visibleSections.forEach(s => s.classList.remove('carousel-active'));
+            this.dots.forEach(d => d.classList.remove('active'));
+
+            // 设置新的 active
+            this.activeIndex = closestIdx;
+            this.visibleSections[closestIdx].classList.add('carousel-active');
+            this.dots[closestIdx].classList.add('active');
+
+            // 触发条纹进场（模拟 mouseenter）
+            this.triggerStripes(this.visibleSections[closestIdx], true);
+
+            // 其他的触发退场
+            this.visibleSections.forEach((s, i) => {
+                if (i !== closestIdx) this.triggerStripes(s, false);
+            });
+        }
+    }
+
+    triggerStripes(section, enter) {
+        const bar = section.querySelector('.panel-title-bar');
+        if (!bar) return;
+        if (enter) {
+            bar.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+        } else {
+            bar.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+        }
+    }
+
+    bindPanelClick() {
+        this.visibleSections.forEach(sec => {
+            const panel = sec.querySelector('.section-panel');
+            if (!panel) return;
+
+            const titleBar = panel.querySelector('.panel-title-bar');
+            // 监听展开/折叠变化
+            const obs = new MutationObserver(() => {
+                const expanded = panel.classList.contains('expanded');
+                if (expanded && !this.isExpanded) {
+                    this.enterExpanded(sec);
+                } else if (!expanded && this.isExpanded) {
+                    this.exitExpanded();
+                }
+            });
+            obs.observe(panel, { attributes: true, attributeFilter: ['class'] });
+        });
+    }
+
+    enterExpanded(section) {
+        this.isExpanded = true;
+        section.classList.add('section-expanded');
+        this.carousel.classList.add('has-expanded');
+        this.dotsContainer.style.display = 'none';
+    }
+
+    exitExpanded() {
+        this.isExpanded = false;
+        this.visibleSections.forEach(s => s.classList.remove('section-expanded'));
+        this.carousel.classList.remove('has-expanded');
+        this.dotsContainer.style.display = '';
+
+        // 恢复滚动位置到之前激活的卡片
+        setTimeout(() => {
+            this.visibleSections[this.activeIndex]?.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+            this.updateActive();
+        }, 100);
+    }
+}
+
 function bootApp() {
     sfx.init();
     const ps = new ParticleSystem();
@@ -1499,6 +1645,7 @@ function bootApp() {
     new BGMPlayer();
     new Settings(ps);
     new GlitchEngine();
+    new MobileCarousel();
     bindGlobalSfx();
 }
 
