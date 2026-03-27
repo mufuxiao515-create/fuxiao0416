@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUXIAO0416 // Personal Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ========== LOADING ========== -->
+<div id="loading-screen">
+    <div class="loader-content">
+        <div class="loader-icon-wrap">
+            <svg viewBox="0 0 120 120" class="loader-icon">
+                <polygon points="60,10 110,90 10,90" fill="none" stroke="currentColor" stroke-width="2"/>
+                <polygon points="60,30 90,80 30,80" fill="none" stroke="currentColor" stroke-width="1"/>
+                <circle cx="60" cy="55" r="8" fill="none" stroke="currentColor" stroke-width="1"/>
+            </svg>
+        </div>
+        <div class="loader-bar-wrap">
+            <span class="loader-label">SYSTEM INITIALIZING</span>
+            <div class="loader-bar-track"><div class="loader-bar-fill" id="loader-bar"></div></div>
+            <span class="loader-pct" id="loader-pct">0%</span>
+        </div>
+        <div class="loader-status" id="loader-status">CONNECTING...</div>
+    </div>
+</div>
+
+<!-- ========== LOGIN SCREEN ========== -->
+<div id="login-screen" class="hidden">
+    <canvas id="login-particles"></canvas>
+    <div class="login-container">
+        <div class="login-frame">
+            <div class="login-corner tl"></div>
+            <div class="login-corner tr"></div>
+            <div class="login-corner bl"></div>
+            <div class="login-corner br"></div>
+
+            <div class="login-header">
+                <div class="login-logo" data-glitch="FUXIAO0416">FUXIAO0416</div>
+                <div class="login-subtitle">PERSONAL HUB // ACCESS CONTROL</div>
+            </div>
+
+            <div class="login-body">
+                <div class="login-instruction">
+                    <span class="login-prompt">&gt;</span> 请输入授权邮箱以验证身份
+                </div>
+                <div class="login-field">
+                    <label class="field-label">EMAIL VERIFICATION</label>
+                    <div class="field-input-wrap">
+                        <input type="email" id="login-email" class="field-input" placeholder="输入QQ邮箱..." autocomplete="email">
+                        <div class="field-line"></div>
+                    </div>
+                    <div class="login-error hidden" id="login-error">
+                        <span class="error-icon">⚠</span> ACCESS DENIED — 未授权的邮箱地址
+                    </div>
+                </div>
+                <button class="btn btn-login" id="login-btn">
+                    <span class="btn-bg"></span>
+                    <span class="btn-text">验证登录</span>
+                    <span class="btn-icon">→</span>
+                </button>
+                <div class="login-hint">
+                    <span class="hint-dot"></span>
+                    AUTHORIZED PERSONNEL ONLY
+                </div>
+            </div>
+        </div>
+        <div class="login-scanline"></div>
+    </div>
+</div>
+
+<!-- ========== MAIN APP ========== -->
+<div id="main-app" class="hidden">
+
+    <!-- Background Overlay -->
+    <div class="bg-overlay"></div>
+
+    <!-- Industrial Texture BG -->
+    <div class="industrial-bg"></div>
+    <div class="cursor-light" id="cursor-light"></div>
+
+    <!-- Background Effects -->
+    <div class="flow-lines-container">
+        <div class="flow-line"></div>
+        <div class="flow-line"></div>
+        <div class="flow-line"></div>
+        <div class="flow-line"></div>
+        <div class="flow-line"></div>
+        <div class="flow-line"></div>
+    </div>
+
+    <div class="sliding-panels">
+        <div class="sliding-panel"></div>
+        <div class="sliding-panel"></div>
+        <div class="sliding-panel"></div>
+        <div class="sliding-panel"></div>
+    </div>
+
+    <div class="geo-shapes">
+        <div class="geo-shape circle"></div>
+        <div class="geo-shape square"></div>
+        <div class="geo-shape circle"></div>
+        <div class="geo-shape square"></div>
+        <div class="geo-shape triangle"></div>
+    </div>
+
+    <div class="gradient-orbs">
+        <div class="gradient-orb"></div>
+        <div class="gradient-orb"></div>
+        <div class="gradient-orb"></div>
+        <div class="gradient-orb"></div>
+    </div>
+
+    <div class="glow-rings">
+        <div class="glow-ring"></div>
+        <div class="glow-ring"></div>
+        <div class="glow-ring"></div>
+    </div>
+
+    <div class="data-streams">
+        <div class="data-stream"></div>
+        <div class="data-stream"></div>
+        <div class="data-stream"></div>
+        <div class="data-stream"></div>
+        <div class="data-stream"></div>
+        <div class="data-stream"></div>
+    </div>
+
+    <!-- Star Trail Canvas -->
+    <canvas id="star-trail-canvas"></canvas>
+
+    <!-- Cursor -->
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+
+    <!-- Particle BG -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Scanlines overlay -->
+    <div class="scanlines-overlay"></div>
+
+
+    <!-- Audio Engine (hidden) -->
+    <audio id="bgm-player" loop></audio>
+
+    <!-- NAV -->
+    <nav id="main-nav">
+        <div class="nav-left">
+            <span class="nav-logo" data-glitch="FUXIAO0416">FUXIAO0416</span>
+            <span class="nav-sep">//</span>
+            <span class="nav-tag">HUB.SYS</span>
+        </div>
+        <div class="nav-center">
+            <a href="#dashboard" class="nav-link active" data-section="dashboard"><span class="nl-idx">01</span><span class="nl-txt">仪表盘</span></a>
+            <a href="#uploads" class="nav-link" data-section="uploads"><span class="nl-idx">02</span><span class="nl-txt">内容库</span></a>
+            <a href="#profile" class="nav-link" data-section="profile"><span class="nl-idx">03</span><span class="nl-txt">资料</span></a>
+            <a href="#settings" class="nav-link" data-section="settings"><span class="nl-idx">04</span><span class="nl-txt">设置</span></a>
+        </div>
+        <div class="nav-right">
+            <div class="nav-music-ctrl" id="music-toggle" title="背景音乐">
+                <svg class="music-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                </svg>
+                <div class="music-bars">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+            <div class="nav-time" id="nav-time">00:00:00</div>
+            <div class="nav-user" id="nav-user-avatar">
+                <div class="nav-avatar-placeholder">F</div>
+            </div>
+            <button class="nav-menu-btn" id="nav-menu-btn"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="mobile-menu">
+        <div class="mobile-menu-bg"></div>
+        <div class="mobile-menu-content">
+            <a href="#dashboard" class="mobile-link" data-section="dashboard"><span class="ml-idx">01</span><span class="ml-txt">仪表盘</span></a>
+            <a href="#uploads" class="mobile-link" data-section="uploads"><span class="ml-idx">02</span><span class="ml-txt">内容库</span></a>
+            <a href="#profile" class="mobile-link" data-section="profile"><span class="ml-idx">03</span><span class="ml-txt">资料</span></a>
+            <a href="#settings" class="mobile-link" data-section="settings"><span class="ml-idx">04</span><span class="ml-txt">设置</span></a>
+        </div>
+    </div>
+
+    <!-- Side indicators -->
+    <div class="side-ind left"><span class="side-txt">SCROLL TO EXPLORE</span><div class="side-line"></div></div>
+    <div class="side-ind right"><div class="side-line"></div><span class="side-txt" id="section-ind">SECTION::01</span></div>
+
+    <!-- ===== DASHBOARD ===== -->
+    <section id="dashboard" class="section dashboard-section">
+        <div class="section-panel collapsed" id="dashboard-panel">
+            <div class="panel-title-bar" data-section="dashboard">
+                <div class="mech-latch"></div>
+                <div class="mech-latch-top"></div>
+                <div class="mech-latch-bottom"></div>
+                <div class="panel-hazard-line"></div>
+                <div class="panel-hazard-stack"></div>
+                <span class="panel-idx">01</span>
+                <h2 class="panel-title" contenteditable="true" spellcheck="false">仪表盘</h2>
+                <span class="panel-arrow">▶</span>
+            </div>
+            <div class="panel-body">
+                <div class="section-inner">
+                <div class="dash-welcome">
+                    <div class="dash-greeting">
+                        <span class="dash-hi">WELCOME BACK,</span>
+                        <h1 class="dash-name" id="dash-username" data-glitch="OPERATOR">OPERATOR</h1>
+                    </div>
+                    <p class="dash-desc">你的个人数字领地已就绪。上传、管理、创造——一切尽在掌控。</p>
+                </div>
+
+                <div class="dash-stats">
+                    <div class="stat-card glass-card" data-color="blue">
+                        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                        <div class="stat-info"><span class="stat-num" id="stat-files">0</span><span class="stat-label">文件总数</span></div>
+                        <div class="stat-glow"></div>
+                    </div>
+                    <div class="stat-card glass-card" data-color="purple">
+                        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                        <div class="stat-info"><span class="stat-num" id="stat-images">0</span><span class="stat-label">图片</span></div>
+                        <div class="stat-glow"></div>
+                    </div>
+                    <div class="stat-card glass-card" data-color="cyan">
+                        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+                        <div class="stat-info"><span class="stat-num" id="stat-videos">0</span><span class="stat-label">视频</span></div>
+                        <div class="stat-glow"></div>
+                    </div>
+                    <div class="stat-card glass-card" data-color="orange">
+                        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+                        <div class="stat-info"><span class="stat-num" id="stat-code">0</span><span class="stat-label">代码</span></div>
+                        <div class="stat-glow"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Upload -->
+                <div class="dash-quick-upload glass-card">
+                    <div class="quick-upload-zone" id="quick-upload-zone">
+                        <div class="upload-icon-animated">
+                            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M32 44V20M22 30l10-10 10 10" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M52 38v10a4 4 0 01-4 4H16a4 4 0 01-4-4V38" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <p class="upload-hint">拖放文件到此处 或 <span class="upload-browse" id="quick-upload-browse">点击选择</span></p>
+                        <p class="upload-formats">支持: 图片 / 视频 / 音频 / 文本 / 代码 / 压缩包</p>
+                        <input type="file" id="quick-upload-input" multiple hidden>
+                    </div>
+                </div>
+
+                <!-- Recent files -->
+                <div class="dash-recent">
+                    <div class="recent-header">
+                        <h3 class="recent-title">最近文件 <span class="recent-tag">RECENT</span></h3>
+                    </div>
+                    <div class="recent-list" id="recent-files-list">
+                        <div class="empty-state">
+                            <div class="empty-icon">📂</div>
+                            <p>暂无文件，快上传你的第一个内容吧</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== UPLOADS / CONTENT LIBRARY ===== -->
+    <section id="uploads" class="section uploads-section">
+        <div class="section-panel collapsed" id="uploads-panel">
+            <div class="panel-title-bar" data-section="uploads">
+                <div class="mech-latch"></div>
+                <div class="mech-latch-top"></div>
+                <div class="mech-latch-bottom"></div>
+                <div class="panel-hazard-line"></div>
+                <div class="panel-hazard-stack"></div>
+                <span class="panel-idx">02</span>
+                <h2 class="panel-title" contenteditable="true" spellcheck="false">内容库</h2>
+                <span class="panel-arrow">▶</span>
+            </div>
+            <div class="panel-body">
+                <div class="section-inner">
+                <div class="section-header">
+                    <div class="section-tag"><span class="tag-line"></span><span>SECTION::02</span></div>
+                    <h2 class="section-title" data-glitch="内容库">内容库</h2>
+                    <p class="section-desc">CONTENT ARCHIVE // ALL FILES</p>
+                </div>
+
+            <!-- Upload area -->
+            <div class="upload-area glass-card">
+                <div class="upload-tabs">
+                    <button class="upload-tab active" data-type="file">📁 文件上传</button>
+                    <button class="upload-tab" data-type="text">📝 文本创作</button>
+                    <button class="upload-tab" data-type="code">💻 代码片段</button>
+                </div>
+
+                <!-- File Upload Panel -->
+                <div class="upload-panel active" id="panel-file">
+                    <div class="upload-dropzone" id="file-dropzone">
+                        <div class="dropzone-visual">
+                            <div class="dz-ring"></div>
+                            <div class="dz-ring delay"></div>
+                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" class="dz-icon">
+                                <path d="M24 34V14M16 22l8-8 8 8" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M40 30v6a4 4 0 01-4 4H12a4 4 0 01-4-4v-6" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <p class="dz-text">拖放文件到此处</p>
+                        <p class="dz-subtext">或点击选择 · 图片/视频/音频/压缩包</p>
+                        <input type="file" id="file-upload-input" multiple hidden>
+                    </div>
+                </div>
+
+                <!-- Text Panel -->
+                <div class="upload-panel" id="panel-text">
+                    <div class="text-editor">
+                        <div class="editor-toolbar">
+                            <input type="text" class="editor-title-input" id="text-title" placeholder="标题...">
+                        </div>
+                        <textarea class="editor-textarea" id="text-content" placeholder="在此输入你的内容...支持自由文本创作"></textarea>
+                        <div class="editor-actions">
+                            <button class="btn btn-accent btn-sm" id="save-text-btn">
+                                <span class="btn-bg"></span><span class="btn-text">保存文本</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code Panel -->
+                <div class="upload-panel" id="panel-code">
+                    <div class="code-editor">
+                        <div class="code-toolbar">
+                            <input type="text" class="code-filename" id="code-filename" placeholder="filename.js">
+                            <select class="code-lang" id="code-lang">
+                                <option value="javascript">JavaScript</option>
+                                <option value="python">Python</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="cpp">C++</option>
+                                <option value="java">Java</option>
+                                <option value="rust">Rust</option>
+                                <option value="go">Go</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="code-area-wrap">
+                            <div class="code-line-numbers" id="code-line-nums">1</div>
+                            <textarea class="code-textarea" id="code-content" placeholder="// 在此粘贴或编写代码..." spellcheck="false"></textarea>
+                        </div>
+                        <div class="editor-actions">
+                            <button class="btn btn-accent btn-sm" id="save-code-btn">
+                                <span class="btn-bg"></span><span class="btn-text">保存代码</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter bar -->
+            <div class="content-filter">
+                <button class="filter-btn active" data-filter="all">ALL</button>
+                <button class="filter-btn" data-filter="image">图片</button>
+                <button class="filter-btn" data-filter="video">视频</button>
+                <button class="filter-btn" data-filter="audio">音频</button>
+                <button class="filter-btn" data-filter="text">文本</button>
+                <button class="filter-btn" data-filter="code">代码</button>
+                <button class="filter-btn" data-filter="archive">压缩包</button>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid" id="content-grid">
+                <div class="empty-state" id="content-empty">
+                    <div class="empty-icon">🗃️</div>
+                    <p>内容库为空，上传一些内容开始吧</p>
+                </div>
+            </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PROFILE ===== -->
+    <section id="profile" class="section profile-section">
+        <div class="section-panel collapsed" id="profile-panel">
+            <div class="panel-title-bar" data-section="profile">
+                <div class="mech-latch"></div>
+                <div class="mech-latch-top"></div>
+                <div class="mech-latch-bottom"></div>
+                <div class="panel-hazard-line"></div>
+                <div class="panel-hazard-stack"></div>
+                <span class="panel-idx">03</span>
+                <h2 class="panel-title" contenteditable="true" spellcheck="false">个人资料</h2>
+                <span class="panel-arrow">▶</span>
+            </div>
+            <div class="panel-body">
+                <div class="section-inner">
+
+            <div class="profile-grid">
+                <div class="profile-card glass-card">
+                    <!-- Avatar -->
+                    <div class="profile-avatar-area">
+                        <div class="avatar-frame-large">
+                            <div class="avatar-display" id="profile-avatar">
+                                <span class="avatar-letter" id="avatar-letter">F</span>
+                            </div>
+                            <div class="avatar-corner tl"></div>
+                            <div class="avatar-corner tr"></div>
+                            <div class="avatar-corner bl"></div>
+                            <div class="avatar-corner br"></div>
+                            <div class="avatar-edit-overlay" id="avatar-edit-btn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                                <span>更换头像</span>
+                            </div>
+                            <input type="file" id="avatar-input" accept="image/*" hidden>
+                        </div>
+                        <div class="avatar-status-bar">
+                            <span class="status-dot green"></span>
+                            <span>ONLINE</span>
+                        </div>
+                    </div>
+
+                    <!-- Profile fields -->
+                    <div class="profile-fields">
+                        <div class="pf-group">
+                            <label class="pf-label">CODENAME / 昵称</label>
+                            <div class="pf-input-wrap">
+                                <input type="text" class="pf-input" id="profile-nickname" placeholder="设置你的昵称..." maxlength="24">
+                                <div class="pf-line"></div>
+                            </div>
+                        </div>
+                        <div class="pf-group">
+                            <label class="pf-label">SIGNATURE / 签名</label>
+                            <div class="pf-input-wrap">
+                                <textarea class="pf-input pf-textarea" id="profile-signature" placeholder="写一段个性签名..." maxlength="200" rows="3"></textarea>
+                                <div class="pf-line"></div>
+                            </div>
+                        </div>
+                        <div class="pf-group">
+                            <label class="pf-label">EMAIL / 邮箱</label>
+                            <div class="pf-input-wrap">
+                                <input type="email" class="pf-input" value="fuxiao0416@qq.com" disabled>
+                                <span class="pf-badge">已验证</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-accent" id="save-profile-btn">
+                            <span class="btn-bg"></span>
+                            <span class="btn-text">保存资料</span>
+                            <span class="btn-icon">✓</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Profile preview -->
+                <div class="profile-preview glass-card">
+                    <div class="preview-header">
+                        <span class="preview-tag">PREVIEW</span>
+                        <span class="preview-label">实时预览</span>
+                    </div>
+                    <div class="preview-card">
+                        <div class="preview-avatar" id="preview-avatar">
+                            <span id="preview-avatar-letter">F</span>
+                        </div>
+                        <div class="preview-info">
+                            <h3 class="preview-name" id="preview-name">OPERATOR</h3>
+                            <p class="preview-sig" id="preview-sig">// 还没有设置签名</p>
+                            <span class="preview-email">fuxiao0416@qq.com</span>
+                        </div>
+                    </div>
+                    <div class="preview-decoration">
+                        <div class="deco-line"></div>
+                        <div class="deco-dots"><span></span><span></span><span></span></div>
+                        <div class="deco-line"></div>
+                    </div>
+                </div>
+            </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== SETTINGS ===== -->
+    <section id="settings" class="section settings-section">
+        <div class="section-panel collapsed" id="settings-panel">
+            <div class="panel-title-bar" data-section="settings">
+                <div class="mech-latch"></div>
+                <div class="mech-latch-top"></div>
+                <div class="mech-latch-bottom"></div>
+                <div class="panel-hazard-line"></div>
+                <div class="panel-hazard-stack"></div>
+                <span class="panel-idx">04</span>
+                <h2 class="panel-title" contenteditable="true" spellcheck="false">设置</h2>
+                <span class="panel-arrow">▶</span>
+            </div>
+            <div class="panel-body">
+                <div class="section-inner">
+
+            <div class="settings-grid">
+                <!-- BGM -->
+                <div class="settings-card glass-card">
+                    <div class="sc-header">
+                        <div class="sc-icon" data-color="purple">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="sc-title">背景音乐</h4>
+                            <p class="sc-desc">上传音频文件作为网站背景音乐</p>
+                        </div>
+                    </div>
+                    <div class="sc-body">
+                        <div class="bgm-upload-area" id="bgm-upload-area">
+                            <div class="bgm-current" id="bgm-current">
+                                <span class="bgm-status">未设置背景音乐</span>
+                            </div>
+                            <button class="btn btn-ghost btn-sm" id="bgm-upload-btn">
+                                <span class="btn-text">上传音频</span>
+                            </button>
+                            <input type="file" id="bgm-input" accept="audio/*" hidden>
+                        </div>
+                        <div class="bgm-controls hidden" id="bgm-controls">
+                            <div class="bgm-track">
+                                <span class="bgm-name" id="bgm-name">--</span>
+                                <div class="bgm-progress"><div class="bgm-progress-fill" id="bgm-progress-fill"></div></div>
+                            </div>
+                            <div class="bgm-btns">
+                                <button class="bgm-btn" id="bgm-play-btn">▶</button>
+                                <input type="range" class="bgm-volume" id="bgm-volume" min="0" max="100" value="30">
+                                <button class="bgm-btn" id="bgm-remove-btn">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sound Effects -->
+                <div class="settings-card glass-card">
+                    <div class="sc-header">
+                        <div class="sc-icon" data-color="cyan">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="sc-title">交互音效</h4>
+                            <p class="sc-desc">为按钮和操作添加音效反馈</p>
+                        </div>
+                    </div>
+                    <div class="sc-body">
+                        <div class="toggle-row">
+                            <span>点击音效</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sfx-click-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <span>悬停音效</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sfx-hover-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <span>操作反馈音</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sfx-action-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme -->
+                <div class="settings-card glass-card">
+                    <div class="sc-header">
+                        <div class="sc-icon" data-color="orange">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="sc-title">视觉效果</h4>
+                            <p class="sc-desc">调整粒子、扫描线和glitch效果</p>
+                        </div>
+                    </div>
+                    <div class="sc-body">
+                        <div class="toggle-row">
+                            <span>粒子背景</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="fx-particles-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <span>扫描线效果</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="fx-scanlines-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-row">
+                            <span>Glitch闪烁</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="fx-glitch-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger zone -->
+                <div class="settings-card glass-card danger">
+                    <div class="sc-header">
+                        <div class="sc-icon" data-color="red">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="sc-title">数据管理</h4>
+                            <p class="sc-desc">清除本地存储的所有数据</p>
+                        </div>
+                    </div>
+                    <div class="sc-body">
+                        <button class="btn btn-danger btn-sm" id="clear-data-btn">
+                            <span class="btn-text">清除所有数据</span>
+                        </button>
+                        <button class="btn btn-ghost btn-sm" id="logout-btn">
+                            <span class="btn-text">退出登录</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-left">
+                <span class="footer-logo">FUXIAO0416://HUB</span>
+                <span class="footer-copy">&copy; 2026 All rights reserved.</span>
+            </div>
+            <div class="footer-right">
+                <span class="footer-status"><span class="status-dot green"></span> ALL SYSTEMS OPERATIONAL</span>
+            </div>
+        </div>
+        <div class="footer-line"></div>
+    </footer>
+
+</div><!-- /main-app -->
+
+<!-- ===== FILE PREVIEW MODAL ===== -->
+<div id="file-modal" class="file-modal">
+    <div class="file-modal-backdrop"></div>
+    <div class="file-modal-container">
+        <div class="file-modal-header">
+            <span class="fm-tag" id="fm-tag">FILE</span>
+            <span class="fm-name" id="fm-name">filename</span>
+            <div class="fm-actions">
+                <button class="fm-btn" id="fm-download" title="下载">⬇</button>
+                <button class="fm-btn" id="fm-delete" title="删除">🗑</button>
+                <button class="fm-btn fm-close" id="fm-close">✕</button>
+            </div>
+        </div>
+        <div class="file-modal-body" id="fm-body">
+            <!-- Dynamic content -->
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
