@@ -1836,18 +1836,29 @@ class MobileCarousel {
         });
     }
 
-    // 点击处理：点到半透明折叠块→跳转，点到空白→按方向移动
+    // 点击处理：点到高亮→展开，点到半透明→跳转，点到空白→按方向移动
     handleTap(x, y) {
         if (this.isAnimating || this.isExpanded) return;
 
-        // 检查是否点击到了某个半透明的折叠块
+        // 检查是否点击到了中心高亮折叠块 → 展开它
+        const centerSec = this.visibleSections[this.centerIndex];
+        if (centerSec) {
+            const centerRect = centerSec.getBoundingClientRect();
+            if (x >= centerRect.left && x <= centerRect.right && y >= centerRect.top && y <= centerRect.bottom) {
+                // 点击高亮折叠块，触发展开
+                const titleBar = centerSec.querySelector('.panel-title-bar');
+                if (titleBar) titleBar.click();
+                return;
+            }
+        }
+
+        // 检查是否点击到了某个半透明的折叠块 → 跳转
         for (let i = 0; i < this.visibleSections.length; i++) {
-            if (i === this.centerIndex) continue; // 跳过中心的
+            if (i === this.centerIndex) continue;
             const sec = this.visibleSections[i];
             if (sec.style.visibility === 'hidden') continue;
             const rect = sec.getBoundingClientRect();
             if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                // 点击到了这个折叠块，直接跳转到它
                 this.goTo(i);
                 return;
             }
