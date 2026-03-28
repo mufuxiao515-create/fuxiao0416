@@ -1932,22 +1932,26 @@ class MobileCarousel {
 }
 
 function bootApp() {
-    sfx.init();
-    const ps = new ParticleSystem();
-    new StarTrail();
-    new InteractiveEffects();
-    new Cursor();
-    new Nav();
-    new FileManager();
-    new Profile();
-    new BGMPlayer();
-    new Settings(ps);
-    new GlitchEngine();
-    new Notes();
-    new Bookmarks();
-    new Journal();
-    window._mobileCarousel = new MobileCarousel();
-    bindGlobalSfx();
+    try {
+        sfx.init();
+        const ps = new ParticleSystem();
+        new StarTrail();
+        new InteractiveEffects();
+        new Cursor();
+        new Nav();
+        new FileManager();
+        new Profile();
+        new BGMPlayer();
+        new Settings(ps);
+        new GlitchEngine();
+        new Notes();
+        new Bookmarks();
+        new Journal();
+        window._mobileCarousel = new MobileCarousel();
+        bindGlobalSfx();
+    } catch(e) {
+        console.error('[bootApp] Error:', e);
+    }
 }
 
 if (document.readyState === 'loading') {

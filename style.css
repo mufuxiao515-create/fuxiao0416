@@ -674,9 +674,12 @@ body:not(.logged-in) #main-nav {
     }
 
     /* 覆盖 font-size:0 */
+    .mobile-carousel > .section,
     .mobile-carousel > .section * {
-        font-size: revert;
+        font-size: 14px;
     }
+    .mobile-carousel > .section .panel-idx { font-size: 10px; }
+    .mobile-carousel > .section .panel-title { font-size: 14px; }
 
     /* 中心卡片的标题栏 — 灰色水晶材质框线延展 */
     .mobile-carousel > .section.carousel-center .panel-title-bar {
