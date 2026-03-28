@@ -1982,6 +1982,17 @@ function bootApp() {
     }
 }
 
+// 全局安全网：无论发生什么，5 秒后强制移除 loading screen
+setTimeout(() => {
+    const ls = document.getElementById('loading-screen');
+    if (ls && !ls.classList.contains('done')) {
+        console.warn('[Safety] Force removing loading screen after 5s timeout');
+        ls.classList.add('done');
+        const app = document.getElementById('main-app');
+        if (app) app.classList.remove('hidden');
+    }
+}, 5000);
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
