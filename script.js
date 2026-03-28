@@ -152,31 +152,45 @@ class Loader {
                 resolve();
                 return;
             }
-            let p = 0;
+
             const msgs = ['CONNECTING...', 'LOADING ASSETS...', 'INIT RENDER ENGINE...', 'DECRYPTING...', 'CALIBRATING...', 'READY.'];
-            const iv = setInterval(() => {
+            let p = 6; // 让进度条一开始就动起来，避免 0% 停留
+            const start = performance.now();
+            const MAX = 1600; // 最长 1.6s 内结束
+            const STEP_MIN = 14;
+            const STEP_MAX = 22;
+
+            const apply = (val) => {
+                this.bar.style.width = val + '%';
+                this.pct.textContent = Math.floor(val) + '%';
+                if (this.status) this.status.textContent = msgs[Math.min(Math.floor(val / 18), msgs.length - 1)];
+            };
+
+            const tick = () => {
                 try {
-                    p += Math.random() * 18 + 5;
-                    if (p >= 100) {
-                        p = 100; clearInterval(iv);
-                        this.bar.style.width = '100%';
-                        this.pct.textContent = '100%';
-                        if (this.status) this.status.textContent = 'READY.';
-                        setTimeout(() => { this.el.classList.add('done'); resolve(); }, 400);
+                    const elapsed = performance.now() - start;
+                    const target = Math.max(p + (Math.random() * (STEP_MAX - STEP_MIN) + STEP_MIN), (elapsed / MAX) * 100);
+                    p = Math.min(target, 100);
+                    apply(p);
+
+                    if (p >= 99 || elapsed >= MAX) {
+                        apply(100);
+                        setTimeout(() => { this.el.classList.add('done'); resolve(); }, 320);
                         return;
                     }
-                    this.bar.style.width = p + '%';
-                    this.pct.textContent = Math.floor(p) + '%';
-                    if (this.status) this.status.textContent = msgs[Math.min(Math.floor(p / 18), msgs.length - 1)];
-                } catch(e) {
-                    clearInterval(iv);
+                    setTimeout(tick, 90);
+                } catch (e) {
                     console.error('[Loader] Error:', e);
-                    if (this.el) this.el.classList.add('done');
+                    this.el.classList.add('done');
                     resolve();
                 }
-            }, 180);
+            };
+
+            apply(p);
+            setTimeout(tick, 90);
         });
     }
+
 }
 
 // ==========================================
