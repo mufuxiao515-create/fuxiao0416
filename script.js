@@ -1663,20 +1663,16 @@ class MobileCarousel {
         if (!this.carousel) return;
         this.active = true;
 
-        // 用 children 遍历直接子元素，不依赖 :scope
-        this.allSections = [];
-        for (let i = 0; i < this.carousel.children.length; i++) {
-            const child = this.carousel.children[i];
-            if (child.tagName === 'SECTION' && child.classList.contains('section')) {
-                this.allSections.push(child);
-            }
-        }
+        // 明确列出所有 section id，确保全部获取
+        const sectionIds = ['dashboard', 'uploads', 'profile', 'settings', 'notes', 'bookmarks', 'journal'];
+        const isLoggedIn = document.body.classList.contains('logged-in') || Store.get('logged_in', false);
 
-        // 过滤掉隐藏的（访客模式下的设置）
-        this.visibleSections = this.allSections.filter(s => {
-            // 检查 CSS 是否 display:none（访客模式隐藏设置）
-            const isHidden = s.id === 'settings' && !document.body.classList.contains('logged-in');
-            return !isHidden;
+        this.visibleSections = [];
+        sectionIds.forEach(id => {
+            // 访客模式隐藏设置
+            if (id === 'settings' && !isLoggedIn) return;
+            const el = document.getElementById(id);
+            if (el) this.visibleSections.push(el);
         });
 
         if (this.visibleSections.length === 0) return;
@@ -1731,13 +1727,13 @@ class MobileCarousel {
         const half = Math.floor(this.MAX_SHOW / 2);
 
         this.visibleSections.forEach((sec, i) => {
-            // 环形距离：取最短路径
+            // 环形距离
             let diff = i - this.centerIndex;
             if (diff > count / 2) diff -= count;
             if (diff < -count / 2) diff += count;
             const absDiff = Math.abs(diff);
 
-            // 超出窗口的隐藏
+            // 超出窗口隐藏
             if (absDiff > half) {
                 sec.style.visibility = 'hidden';
                 sec.style.opacity = '0';
@@ -1777,10 +1773,10 @@ class MobileCarousel {
         }
     }
 
+    // 循环取模
     goTo(index) {
         if (this.isAnimating) return;
         const count = this.visibleSections.length;
-        // 循环：取模
         this.isAnimating = true;
         this.centerIndex = ((index % count) + count) % count;
         this.applyLayout();
