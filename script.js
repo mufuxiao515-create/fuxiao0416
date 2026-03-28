@@ -1907,36 +1907,56 @@ class MobileCarousel {
         let startY = 0, startX = 0, moved = false;
 
         this.carousel.addEventListener('touchstart', (e) => {
-            if (this.isExpanded) return;
             startY = e.touches[0].clientY;
             startX = e.touches[0].clientX;
             moved = false;
         }, { passive: true });
 
         this.carousel.addEventListener('touchmove', (e) => {
-            if (this.isExpanded) return;
             moved = true;
-            // 轮播模式下阻止默认滚动
+            // 轮播模式下阻止默认滚动，展开模式允许滚动
             if (!this.isExpanded) {
                 e.preventDefault();
             }
         }, { passive: false });
 
         this.carousel.addEventListener('touchend', (e) => {
-            if (this.isExpanded) return;
             const endY = e.changedTouches[0].clientY;
             const endX = e.changedTouches[0].clientX;
             const dy = endY - startY;
             const dx = endX - startX;
 
-            // 滑动手势
+            // 展开状态：检测点击 title-bar 区域来折叠
+            if (this.isExpanded) {
+                // 只处理点击（非滑动），让 title-bar 自然处理 click
+                // 如果滑动了，说明用户在滚动内容，不处理
+                if (!moved || (Math.abs(dy) < 10 && Math.abs(dx) < 10)) {
+                    // 检查是否点击到了 title-bar
+                    const target = document.elementFromPoint(endX, endY);
+                    if (target) {
+                        const titleBar = target.closest('.panel-title-bar');
+                        if (titleBar) {
+                            // 手动触发折叠
+                            const panel = titleBar.closest('.section-panel');
+                            if (panel && panel.classList.contains('expanded')) {
+                                panel.classList.remove('expanded');
+                                panel.classList.add('collapsed');
+                                return;
+                            }
+                        }
+                    }
+                }
+                return;
+            }
+
+            // 轮播模式：滑动手势
             if (moved && Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) {
                 if (dy < 0) this.next();
                 else this.prev();
                 return;
             }
 
-            // 点击（非滑动）
+            // 轮播模式：点击（非滑动）
             if (!moved || (Math.abs(dy) < 10 && Math.abs(dx) < 10)) {
                 this.handleTap(endX, endY);
             }
@@ -1956,30 +1976,38 @@ class MobileCarousel {
         });
     }
 
-    // 点击处理：点到高亮→展开，点到半透明→跳转，点到空白→按方向移动
+    // 点击处理：点到任意折叠块→选中并展开，点到空白→按方向移动
     handleTap(x, y) {
         if (this.isAnimating || this.isExpanded) return;
 
-        // 检查是否点击到了中心高亮折叠块 → 展开它
+        // 检查是否点击到了中心高亮折叠块 → 直接展开
         const centerSec = this.visibleSections[this.centerIndex];
         if (centerSec) {
             const centerRect = centerSec.getBoundingClientRect();
             if (x >= centerRect.left && x <= centerRect.right && y >= centerRect.top && y <= centerRect.bottom) {
-                // 点击高亮折叠块，触发展开
                 const titleBar = centerSec.querySelector('.panel-title-bar');
                 if (titleBar) titleBar.click();
                 return;
             }
         }
 
-        // 检查是否点击到了某个半透明的折叠块 → 跳转
+        // 检查是否点击到了某个非高亮的折叠块 → 跳转到它并自动展开
         for (let i = 0; i < this.visibleSections.length; i++) {
             if (i === this.centerIndex) continue;
             const sec = this.visibleSections[i];
             if (sec.style.visibility === 'hidden') continue;
             const rect = sec.getBoundingClientRect();
             if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-                this.goTo(i);
+                // 先跳转到该卡片
+                this.isAnimating = true;
+                this.centerIndex = i;
+                this.applyLayout();
+                // 跳转动画完成后自动展开
+                setTimeout(() => {
+                    this.isAnimating = false;
+                    const titleBar = sec.querySelector('.panel-title-bar');
+                    if (titleBar) titleBar.click();
+                }, 400);
                 return;
             }
         }
@@ -1989,9 +2017,9 @@ class MobileCarousel {
             const centerRect = centerSec.getBoundingClientRect();
             const centerMid = centerRect.top + centerRect.height / 2;
             if (y < centerMid) {
-                this.prev(); // 点击在中心上方
+                this.prev();
             } else {
-                this.next(); // 点击在中心下方
+                this.next();
             }
         }
 
