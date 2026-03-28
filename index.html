@@ -8,19 +8,48 @@
     <!-- 字体异步加载，不阻塞渲染 -->
     <link rel="preload" href="https://fonts.loli.net/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Fira+Code:wght@300;400;500&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.loli.net/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet"></noscript>
-    <link rel="stylesheet" href="style.css?v=20260328f">
+    <link rel="stylesheet" href="style.css?v=20260328g">
 
-    <!-- 兜底：即使 main JS 失败，也在 6s 后强制移除 loading screen，避免卡 0% -->
+    <!-- 预加载器：主脚本未就绪时也显示进度，避免卡在 0% -->
     <script>
-      setTimeout(() => {
-        const ls = document.getElementById('loading-screen');
-        if (ls && !ls.classList.contains('done')) {
-          ls.classList.add('done');
-          const app = document.getElementById('main-app');
-          if (app) app.classList.remove('hidden');
-          console.warn('[Fallback] Inline timeout removed loading screen after 6s');
-        }
-      }, 6000);
+      window.__preloaderDone = false;
+      window.__preloaderTimer = null;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const bar = document.getElementById('loader-bar');
+        const pct = document.getElementById('loader-pct');
+        const status = document.getElementById('loader-status');
+        if (!bar || !pct) return;
+
+        const msgs = ['CONNECTING...', 'LOADING ASSETS...', 'INIT RENDER ENGINE...', 'DECRYPTING...', 'CALIBRATING...', 'READY.'];
+        let p = 2;
+        const start = performance.now();
+
+        const tick = () => {
+          if (window.__preloaderDone) return;
+          const elapsed = performance.now() - start;
+          p = Math.min(92, Math.max(p + Math.random() * 5 + 2, elapsed / 35));
+          bar.style.width = p + '%';
+          pct.textContent = Math.floor(p) + '%';
+          if (status) status.textContent = msgs[Math.min(Math.floor(p / 18), msgs.length - 1)];
+          window.__preloaderTimer = setTimeout(tick, 110);
+        };
+
+        tick();
+
+        // 兜底：即使 main JS 失败，也在 6s 后强制移除 loading screen
+        setTimeout(() => {
+          const ls = document.getElementById('loading-screen');
+          if (ls && !ls.classList.contains('done')) {
+            ls.classList.add('done');
+            const app = document.getElementById('main-app');
+            if (app) app.classList.remove('hidden');
+            console.warn('[Fallback] Inline timeout removed loading screen after 6s');
+          }
+          window.__preloaderDone = true;
+          if (window.__preloaderTimer) clearTimeout(window.__preloaderTimer);
+        }, 6000);
+      });
     </script>
 </head>
 <body>
@@ -813,6 +842,6 @@
 <!-- Toast -->
 <div id="toast-container"></div>
 
-<script src="script.js?v=20260328f"></script>
+<script src="script.js?v=20260328g"></script>
 </body>
 </html>

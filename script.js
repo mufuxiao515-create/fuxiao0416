@@ -153,12 +153,21 @@ class Loader {
                 return;
             }
 
+            // 停止 head 中的预加载器，由主脚本接管进度
+            window.__preloaderDone = true;
+            if (window.__preloaderTimer) {
+                clearTimeout(window.__preloaderTimer);
+                window.__preloaderTimer = null;
+            }
+
             const msgs = ['CONNECTING...', 'LOADING ASSETS...', 'INIT RENDER ENGINE...', 'DECRYPTING...', 'CALIBRATING...', 'READY.'];
-            let p = 6; // 让进度条一开始就动起来，避免 0% 停留
+            const existing = parseInt(String(this.pct.textContent || '0').replace('%', ''), 10);
+            let p = Number.isFinite(existing) ? Math.max(existing, 6) : 6;
             const start = performance.now();
-            const MAX = 1600; // 最长 1.6s 内结束
-            const STEP_MIN = 14;
-            const STEP_MAX = 22;
+            const MAX = 1200; // 主脚本接管后尽快完成加载
+            const STEP_MIN = 16;
+            const STEP_MAX = 24;
+
 
             const apply = (val) => {
                 this.bar.style.width = val + '%';
@@ -1472,6 +1481,12 @@ async function init() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('main-app').classList.remove('hidden');
     bootApp();
+
+    // 首屏先完成交互，再延后加载大背景贴图
+    requestAnimationFrame(() => {
+        setTimeout(() => document.body.classList.add('bg-ready'), 120);
+    });
+
 
     // 如果已登录，添加 logged-in 类
     if (isLoggedIn) {

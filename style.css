@@ -177,7 +177,7 @@ body.cursor-hover #cursor-ring { width:50px; height:50px; border-color:var(--cya
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    background: url('bg-industrial.png') repeat;
+    background-repeat: repeat;
     background-size: 512px 512px;
     opacity: 0.04;
     filter: grayscale(1) brightness(0.3);
@@ -192,7 +192,7 @@ body.cursor-hover #cursor-ring { width:50px; height:50px; border-color:var(--cya
     pointer-events: none;
     z-index: -1;
     transform: translate(-50%, -50%);
-    background: url('bg-industrial.png') repeat;
+    background-repeat: repeat;
     background-size: 512px 512px;
     filter: grayscale(0.4) brightness(1.2);
     opacity: 0;
@@ -204,6 +204,18 @@ body.cursor-hover #cursor-ring { width:50px; height:50px; border-color:var(--cya
 .cursor-light.active {
     opacity: 1;
 }
+
+/* 首屏先不加载 2MB 背景贴图，待应用就绪后再启用 */
+body:not(.bg-ready) .industrial-bg,
+body:not(.bg-ready) .cursor-light {
+    background-image: none;
+}
+
+body.bg-ready .industrial-bg,
+body.bg-ready .cursor-light {
+    background-image: url('bg-industrial.png');
+}
+
 
 /* === NAV === */
 #main-nav {
@@ -294,7 +306,7 @@ body:not(.logged-in) #main-nav {
 }
 
 /* === DASHBOARD === */
-.dashboard-section { padding-top:calc(var(--nav-h) + 60px); display:flex; align-items:flex-start; }
+.dashboard-section { padding-top:0; display:flex; align-items:flex-start; }
 .dash-welcome { margin-bottom:48px; }
 .dash-hi { font-family:var(--font-d); font-size:11px; letter-spacing:5px; color:var(--t3); }
 .dash-name { font-size:56px; font-weight:700; letter-spacing:4px; background:linear-gradient(135deg,var(--blue),var(--cyan),var(--purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1.2; }
@@ -360,7 +372,7 @@ body:not(.logged-in) #main-nav {
 .fi-btn.delete:hover { border-color:var(--red); color:var(--red); }
 
 /* === UPLOADS === */
-.uploads-section { padding-top:calc(var(--nav-h) + 80px); }
+.uploads-section { padding-top:0; }
 .upload-area { margin-bottom:40px; }
 .upload-tabs { display:flex; border-bottom:1px solid var(--border); }
 .upload-tab {
@@ -443,7 +455,7 @@ body:not(.logged-in) #main-nav {
 .content-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
 
 /* === PROFILE === */
-.profile-section { padding-top:calc(var(--nav-h) + 80px); }
+.profile-section { padding-top:0; }
 .profile-grid { display:grid; grid-template-columns:1fr 1fr; gap:32px; }
 .profile-card { padding:40px; }
 .profile-avatar-area { text-align:center; margin-bottom:32px; }
@@ -507,7 +519,7 @@ body:not(.logged-in) #main-nav {
 .deco-dots span { width:4px; height:4px; border-radius:50%; background:var(--purple); opacity:.4; }
 
 /* === SETTINGS === */
-.settings-section { padding-top:calc(var(--nav-h) + 80px); }
+.settings-section { padding-top:0; }
 .settings-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
 .settings-card { padding:28px; }
 .settings-card.danger { border-color:rgba(255,68,85,0.2); }
