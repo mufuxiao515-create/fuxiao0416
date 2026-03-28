@@ -678,15 +678,28 @@ body:not(.logged-in) #main-nav {
         font-size: revert;
     }
 
-    /* 中心卡片的标题栏模拟悬停效果 */
+    /* 中心卡片的标题栏 — 灰色水晶材质框线延展 */
     .mobile-carousel > .section.carousel-center .panel-title-bar {
-        border-color: rgba(255,200,0,0.5);
-        box-shadow: 0 0 15px rgba(255,200,0,0.15),
-                    5px 0 0 #ffc800,
-                    0 5px 0 #ffc800,
-                    5px 5px 0 #ffc800,
+        border-color: rgba(200,210,220,0.5);
+        box-shadow: 0 0 20px rgba(200,210,220,0.1),
+                    /* 右侧延展 - 水晶灰 */
+                    5px 0 0 rgba(180,190,200,0.6),
+                    /* 下方延展 */
+                    0 5px 0 rgba(180,190,200,0.6),
+                    /* 右下角 */
+                    5px 5px 0 rgba(180,190,200,0.5),
+                    /* 左上空隙 */
                     -2px 0 0 rgba(0,0,0,0.8),
-                    0 -2px 0 rgba(0,0,0,0.8);
+                    0 -2px 0 rgba(0,0,0,0.8),
+                    /* 水晶内发光 */
+                    inset 0 1px 0 rgba(255,255,255,0.15),
+                    inset 0 -1px 0 rgba(255,255,255,0.05);
+        background: linear-gradient(
+            135deg,
+            rgba(10,10,10,1) 0%,
+            rgba(25,28,32,1) 40%,
+            rgba(15,15,18,1) 100%
+        );
     }
 
     /* 手机端 section-panel */
@@ -1420,6 +1433,70 @@ body.logged-in {
     min-width: 0;
     transition: background 0.3s, color 0.3s;
     caret-color: #ffc800;
+    position: relative;
+    overflow: visible;
+}
+
+/* 文字右侧粒子渐变分解效果 */
+.panel-title::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -40px;
+    width: 60px;
+    height: 100%;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle 1.5px, #ffc800 100%, transparent 100%),
+        radial-gradient(circle 1px, #ffc800 100%, transparent 100%),
+        radial-gradient(circle 1px, rgba(255,200,0,0.7) 100%, transparent 100%),
+        radial-gradient(circle 0.8px, rgba(255,200,0,0.5) 100%, transparent 100%),
+        radial-gradient(circle 1.2px, rgba(255,200,0,0.6) 100%, transparent 100%),
+        radial-gradient(circle 0.6px, rgba(255,200,0,0.4) 100%, transparent 100%),
+        radial-gradient(circle 1px, rgba(255,200,0,0.3) 100%, transparent 100%),
+        radial-gradient(circle 0.8px, rgba(255,200,0,0.2) 100%, transparent 100%);
+    background-position:
+        2px 30%, 8px 55%, 15px 20%, 22px 70%,
+        30px 40%, 38px 15%, 45px 65%, 52px 45%;
+    background-size: 3px 3px, 2px 2px, 2px 2px, 1.6px 1.6px,
+                     2.4px 2.4px, 1.2px 1.2px, 2px 2px, 1.6px 1.6px;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    animation: particleDrift 3s ease-in-out infinite;
+}
+
+.panel-title-bar:hover .panel-title::after,
+.carousel-center .panel-title::after {
+    opacity: 1;
+}
+
+/* 展开状态的粒子分解 */
+.section-panel.expanded .panel-title::after {
+    opacity: 1;
+    background-image:
+        radial-gradient(circle 1.5px, #0a0a0a 100%, transparent 100%),
+        radial-gradient(circle 1px, #0a0a0a 100%, transparent 100%),
+        radial-gradient(circle 1px, rgba(10,10,10,0.7) 100%, transparent 100%),
+        radial-gradient(circle 0.8px, rgba(10,10,10,0.5) 100%, transparent 100%),
+        radial-gradient(circle 1.2px, rgba(10,10,10,0.6) 100%, transparent 100%),
+        radial-gradient(circle 0.6px, rgba(10,10,10,0.4) 100%, transparent 100%),
+        radial-gradient(circle 1px, rgba(10,10,10,0.3) 100%, transparent 100%),
+        radial-gradient(circle 0.8px, rgba(10,10,10,0.2) 100%, transparent 100%);
+}
+
+@keyframes particleDrift {
+    0%, 100% {
+        background-position:
+            2px 30%, 8px 55%, 15px 20%, 22px 70%,
+            30px 40%, 38px 15%, 45px 65%, 52px 45%;
+        opacity: var(--p-opacity, 0);
+    }
+    50% {
+        background-position:
+            5px 25%, 12px 60%, 18px 15%, 26px 75%,
+            34px 35%, 42px 20%, 48px 60%, 55px 50%;
+    }
 }
 
 .panel-title:focus {

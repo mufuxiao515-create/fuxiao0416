@@ -1803,12 +1803,22 @@ class MobileCarousel {
         }, { passive: false });
 
         this.carousel.addEventListener('touchend', (e) => {
-            if (this.isExpanded || !moved) return;
-            const dy = e.changedTouches[0].clientY - startY;
-            const dx = e.changedTouches[0].clientX - startX;
-            if (Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) {
+            if (this.isExpanded) return;
+            const endY = e.changedTouches[0].clientY;
+            const endX = e.changedTouches[0].clientX;
+            const dy = endY - startY;
+            const dx = endX - startX;
+
+            // 滑动手势
+            if (moved && Math.abs(dy) > 30 && Math.abs(dy) > Math.abs(dx)) {
                 if (dy < 0) this.next();
                 else this.prev();
+                return;
+            }
+
+            // 点击（非滑动）
+            if (!moved || (Math.abs(dy) < 10 && Math.abs(dx) < 10)) {
+                this.handleTap(endX, endY);
             }
         }, { passive: true });
 
@@ -1818,6 +1828,42 @@ class MobileCarousel {
             if (e.deltaY > 0) this.next();
             else this.prev();
         }, { passive: false });
+
+        // 桌面端点击支持
+        this.carousel.addEventListener('click', (e) => {
+            if (this.isExpanded || window.innerWidth > 768) return;
+            this.handleTap(e.clientX, e.clientY);
+        });
+    }
+
+    // 点击处理：点到半透明折叠块→跳转，点到空白→按方向移动
+    handleTap(x, y) {
+        if (this.isAnimating || this.isExpanded) return;
+
+        // 检查是否点击到了某个半透明的折叠块
+        for (let i = 0; i < this.visibleSections.length; i++) {
+            if (i === this.centerIndex) continue; // 跳过中心的
+            const sec = this.visibleSections[i];
+            if (sec.style.visibility === 'hidden') continue;
+            const rect = sec.getBoundingClientRect();
+            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                // 点击到了这个折叠块，直接跳转到它
+                this.goTo(i);
+                return;
+            }
+        }
+
+        // 没点到任何折叠块，按点击位置的上下方向移动一次
+        const centerSec = this.visibleSections[this.centerIndex];
+        if (centerSec) {
+            const centerRect = centerSec.getBoundingClientRect();
+            const centerMid = centerRect.top + centerRect.height / 2;
+            if (y < centerMid) {
+                this.prev(); // 点击在中心上方
+            } else {
+                this.next(); // 点击在中心下方
+            }
+        }
     }
 
     triggerStripes(section, enter) {
