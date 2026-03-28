@@ -146,21 +146,34 @@ class Loader {
     }
     run() {
         return new Promise(resolve => {
+            // 安全检查：如果关键元素不存在，直接跳过加载动画
+            if (!this.el || !this.bar || !this.pct) {
+                if (this.el) this.el.classList.add('done');
+                resolve();
+                return;
+            }
             let p = 0;
             const msgs = ['CONNECTING...', 'LOADING ASSETS...', 'INIT RENDER ENGINE...', 'DECRYPTING...', 'CALIBRATING...', 'READY.'];
             const iv = setInterval(() => {
-                p += Math.random() * 18 + 5;
-                if (p >= 100) {
-                    p = 100; clearInterval(iv);
-                    this.bar.style.width = '100%';
-                    this.pct.textContent = '100%';
-                    this.status.textContent = 'READY.';
-                    setTimeout(() => { this.el.classList.add('done'); resolve(); }, 400);
-                    return;
+                try {
+                    p += Math.random() * 18 + 5;
+                    if (p >= 100) {
+                        p = 100; clearInterval(iv);
+                        this.bar.style.width = '100%';
+                        this.pct.textContent = '100%';
+                        if (this.status) this.status.textContent = 'READY.';
+                        setTimeout(() => { this.el.classList.add('done'); resolve(); }, 400);
+                        return;
+                    }
+                    this.bar.style.width = p + '%';
+                    this.pct.textContent = Math.floor(p) + '%';
+                    if (this.status) this.status.textContent = msgs[Math.min(Math.floor(p / 18), msgs.length - 1)];
+                } catch(e) {
+                    clearInterval(iv);
+                    console.error('[Loader] Error:', e);
+                    if (this.el) this.el.classList.add('done');
+                    resolve();
                 }
-                this.bar.style.width = p + '%';
-                this.pct.textContent = Math.floor(p) + '%';
-                this.status.textContent = msgs[Math.min(Math.floor(p / 18), msgs.length - 1)];
             }, 180);
         });
     }
@@ -1429,10 +1442,17 @@ function bindGlobalSfx() {
 // INIT
 // ==========================================
 async function init() {
-    const loader = new Loader();
-    await loader.run();
+    try {
+        const loader = new Loader();
+        await loader.run();
+    } catch(e) {
+        console.error('[init] Loader error:', e);
+        const ls = document.getElementById('loading-screen');
+        if (ls) ls.classList.add('done');
+    }
 
-    const isLoggedIn = Store.get('logged_in', false);
+    try {
+        const isLoggedIn = Store.get('logged_in', false);
 
     // 未登录用户可以直接浏览，登录用户解锁全部功能
     document.getElementById('login-screen').classList.add('hidden');
@@ -1458,6 +1478,14 @@ async function init() {
     } else {
         // 未登录，显示提示横幅
         showGuestBanner();
+    }
+    } catch(e) {
+        console.error('[init] Error:', e);
+        // 确保loading screen消失
+        const ls = document.getElementById('loading-screen');
+        if (ls) ls.classList.add('done');
+        const app = document.getElementById('main-app');
+        if (app) app.classList.remove('hidden');
     }
 }
 
