@@ -286,6 +286,12 @@ body:not(.logged-in) #main-nav {
 .section { position:relative; z-index:1; min-height:auto; padding:0; margin:0; font-size:0; }
 .section:first-of-type { padding-top: calc(var(--nav-h) + 40px); }
 .section-inner { max-width:1200px; margin:0 auto; padding: 40px 48px 40px; font-size:14px; line-height:1.6; }
+
+/* 手机端重置 font-size:0 泄漏 */
+@media(max-width:768px) {
+    .section { font-size: 14px; }
+    .section:first-of-type { padding-top: 0; }
+}
 .section-header { text-align:center; margin-bottom:60px; }
 .section-tag { display:inline-flex; align-items:center; gap:10px; font-family:var(--font-d); font-size:9px; letter-spacing:4px; color:var(--t4); margin-bottom:20px; }
 .tag-line { width:28px; height:1px; background:var(--blue); }
@@ -648,6 +654,8 @@ body:not(.logged-in) #main-nav {
     #cursor-dot,#cursor-ring { display:none; }
     .cursor-light { display:none; }
     .side-ind { display:none; }
+    /* 手机端全局恢复 cursor */
+    *, *::before, *::after { cursor: auto !important; }
     .nav-center { display:none; }
     .nav-menu-btn { display:flex; }
     .nav-time { display:none; }
@@ -669,10 +677,15 @@ body:not(.logged-in) #main-nav {
     .mobile-carousel {
         position: relative;
         width: 100%;
+        /* 使用 dvh 优先，100vh 回退，避免手机浏览器地址栏导致的高度不稳定 */
         height: 100vh;
+        height: 100dvh;
         overflow: hidden;
         padding: 0;
         margin: 0;
+        /* 阻止手机端过度滚动导致的橡皮筋效果 */
+        overscroll-behavior: none;
+        touch-action: pan-y;
     }
 
     /* 所有 section 绝对定位堆叠 */
@@ -682,7 +695,7 @@ body:not(.logged-in) #main-nav {
         width: 90%;
         padding: 0 !important;
         margin: 0 !important;
-        font-size: 14px;
+        font-size: 14px !important;
         line-height: 1.6;
         /* JS 控制 top, transform, opacity, z-index */
         transition: top 0.45s cubic-bezier(0.23,1,0.32,1),
@@ -692,12 +705,11 @@ body:not(.logged-in) #main-nav {
     }
 
     /* 覆盖 font-size:0 */
-    .mobile-carousel > .section,
-    .mobile-carousel > .section * {
-        font-size: 14px;
+    .mobile-carousel > .section *:not(.panel-idx):not(.panel-title):not(.panel-arrow) {
+        font-size: inherit;
     }
-    .mobile-carousel > .section .panel-idx { font-size: 10px; }
-    .mobile-carousel > .section .panel-title { font-size: 14px; }
+    .mobile-carousel > .section .panel-idx { font-size: 10px !important; }
+    .mobile-carousel > .section .panel-title { font-size: 14px !important; }
 
     /* 中心卡片的标题栏 — 灰色水晶材质框线延展 */
     .mobile-carousel > .section.carousel-center .panel-title-bar {
@@ -753,6 +765,10 @@ body:not(.logged-in) #main-nav {
     /* 展开状态：全屏显示当前面板 */
     .mobile-carousel.has-expanded {
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        height: auto;
+        min-height: 100vh;
+        min-height: 100dvh;
     }
     .mobile-carousel.has-expanded > .section {
         position: relative !important;
@@ -761,6 +777,7 @@ body:not(.logged-in) #main-nav {
         top: auto !important;
         transform: none !important;
         opacity: 1 !important;
+        font-size: 14px !important;
     }
     .mobile-carousel.has-expanded > .section:not(.section-expanded) {
         display: none !important;
@@ -768,7 +785,9 @@ body:not(.logged-in) #main-nav {
     .mobile-carousel.has-expanded > .section.section-expanded {
         display: block !important;
         z-index: 10 !important;
+        /* 为导航栏 + 访客横幅腾出空间 */
         padding-top: 100px !important;
+        padding-bottom: 40px !important;
     }
 
     /* 访客横幅 */
@@ -831,7 +850,7 @@ body:not(.logged-in) #main-nav {
     .panel-title-bar { height:48px; padding:8px 12px; }
     .panel-title { font-size:13px; }
     .section-panel.expanded .panel-title-bar { height:52px; }
-    .section-inner { padding:12px 8px; }
+    .section-inner { padding:16px 12px; font-size:14px; }
     .guest-banner { height:36px; font-size:11px; }
     body:not(.logged-in) #main-nav { top:36px; }
 }

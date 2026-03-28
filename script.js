@@ -569,8 +569,13 @@ class InteractiveEffects {
                     panel.classList.remove('collapsed');
                     panel.classList.add('expanded');
 
+                    // 手机端展开后滚动到顶部，桌面端滚动到面板位置
                     setTimeout(() => {
-                        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        if (window.innerWidth <= 768) {
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        } else {
+                            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
                     }, 100);
                 }
             });
@@ -672,6 +677,27 @@ class Nav {
                 e.preventDefault();
                 sfx.play('navigate');
                 const s = l.getAttribute('data-section');
+
+                // 手机端：如果有轮播实例，先关闭展开状态然后跳转到对应卡片
+                if (window.innerWidth <= 768 && window._mobileCarousel && window._mobileCarousel.active) {
+                    const mc = window._mobileCarousel;
+                    // 如果当前在展开状态，先收起
+                    if (mc.isExpanded) {
+                        const expandedPanel = document.querySelector('.section-panel.expanded');
+                        if (expandedPanel) {
+                            expandedPanel.classList.remove('expanded');
+                            expandedPanel.classList.add('collapsed');
+                        }
+                    }
+                    // 找到对应的 section index
+                    const idx = mc.visibleSections.findIndex(sec => sec.id === s);
+                    if (idx >= 0) {
+                        setTimeout(() => mc.goTo(idx), 100);
+                    }
+                    this.closeMobile();
+                    return;
+                }
+
                 document.getElementById(s)?.scrollIntoView({ behavior: 'smooth' });
                 this.closeMobile();
             });
@@ -1741,11 +1767,26 @@ class MobileCarousel {
         this.CARD_H = 70;
         this.CENTER_Y = 0;
 
+        // 阻止 body 在轮播模式下滚动
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        document.body.style.height = '100%';
+
         this.calcCenterY();
         this.createDots();
         this.applyLayout();
         this.bindTouch();
         this.bindPanelClick();
+
+        // 使用 visualViewport 监听地址栏变化
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                if (window.innerWidth > 768) return;
+                this.calcCenterY();
+                if (!this.isExpanded) this.applyLayout();
+            });
+        }
 
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) return;
@@ -1755,7 +1796,8 @@ class MobileCarousel {
     }
 
     calcCenterY() {
-        const vh = window.innerHeight;
+        // 使用 visualViewport 获取真实可视高度，回退到 innerHeight
+        const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
         const navH = 48 + (document.body.classList.contains('logged-in') ? 0 : 40);
         this.CENTER_Y = navH + (vh - navH) * 0.35;
     }
@@ -1801,6 +1843,7 @@ class MobileCarousel {
 
             sec.style.visibility = 'visible';
             sec.style.pointerEvents = diff === 0 ? 'auto' : 'none';
+            sec.style.display = '';  // 确保不残留 display:none
 
             const top = this.CENTER_Y + diff * this.CARD_H;
             const scale = 1 - absDiff * 0.06;
@@ -1856,7 +1899,10 @@ class MobileCarousel {
         this.carousel.addEventListener('touchmove', (e) => {
             if (this.isExpanded) return;
             moved = true;
-            e.preventDefault();
+            // 轮播模式下阻止默认滚动
+            if (!this.isExpanded) {
+                e.preventDefault();
+            }
         }, { passive: false });
 
         this.carousel.addEventListener('touchend', (e) => {
@@ -1922,7 +1968,6 @@ class MobileCarousel {
         }
 
         // 没点到任何折叠块，按点击位置的上下方向移动一次
-        const centerSec = this.visibleSections[this.centerIndex];
         if (centerSec) {
             const centerRect = centerSec.getBoundingClientRect();
             const centerMid = centerRect.top + centerRect.height / 2;
@@ -1932,6 +1977,7 @@ class MobileCarousel {
                 this.next(); // 点击在中心下方
             }
         }
+
     }
 
     triggerStripes(section, enter) {
@@ -1958,17 +2004,31 @@ class MobileCarousel {
         section.classList.add('section-expanded');
         this.carousel.classList.add('has-expanded');
         if (this.dotsContainer) this.dotsContainer.style.display = 'none';
+        // 允许 body 滚动展开的内容
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        // 滚动到顶部
+        window.scrollTo(0, 0);
     }
 
     exitExpanded() {
         this.isExpanded = false;
         this.visibleSections.forEach(s => {
             s.classList.remove('section-expanded');
+            // 重置所有内联样式让轮播重新接管
+            s.style.display = '';
             s.style.visibility = '';
             s.style.pointerEvents = '';
         });
         this.carousel.classList.remove('has-expanded');
         if (this.dotsContainer) this.dotsContainer.style.display = '';
+        // 重新锁定 body 滚动
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        document.body.style.height = '100%';
+        // 重新计算并应用布局
+        this.calcCenterY();
         setTimeout(() => this.applyLayout(), 50);
     }
 
@@ -1982,8 +2042,14 @@ class MobileCarousel {
             s.style.zIndex = '';
             s.style.visibility = '';
             s.style.pointerEvents = '';
+            s.style.display = '';
         });
         this.carousel.classList.remove('has-expanded');
+        // 恢复 body
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.width = '';
+        document.body.style.height = '';
         this.active = false;
     }
 }
