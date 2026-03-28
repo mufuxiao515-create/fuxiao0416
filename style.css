@@ -787,7 +787,51 @@ body:not(.logged-in) #main-nav {
         z-index: 10 !important;
         /* 为导航栏 + 访客横幅腾出空间 */
         padding-top: 100px !important;
-        padding-bottom: 40px !important;
+        padding-bottom: 80px !important;
+    }
+
+    /* 手机端悬浮收起按钮 */
+    .mobile-collapse-btn {
+        display: none;
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        background: rgba(0, 0, 0, 0.85);
+        color: #ffcc00;
+        border: 1.5px solid #ffcc00;
+        border-radius: 24px;
+        padding: 10px 28px;
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        cursor: pointer;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 2px 16px rgba(255, 204, 0, 0.25), 0 0 0 1px rgba(255,204,0,0.1);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        opacity: 0;
+        pointer-events: none;
+        font-family: 'Orbitron', 'JetBrains Mono', monospace;
+    }
+    .mobile-collapse-btn.visible {
+        display: block;
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .mobile-collapse-btn:active {
+        transform: translateX(-50%) scale(0.95);
+        background: rgba(255, 204, 0, 0.2);
+    }
+    .mobile-collapse-btn .btn-icon {
+        display: inline-block;
+        margin-right: 6px;
+        font-size: 12px;
+        transition: transform 0.3s ease;
+    }
+    .mobile-collapse-btn:active .btn-icon {
+        transform: rotate(180deg);
     }
 
     /* 访客横幅 */

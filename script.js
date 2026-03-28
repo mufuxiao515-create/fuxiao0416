@@ -1775,6 +1775,7 @@ class MobileCarousel {
 
         this.calcCenterY();
         this.createDots();
+        this.createCollapseBtn();
         this.applyLayout();
         this.bindTouch();
         this.bindPanelClick();
@@ -1817,6 +1818,22 @@ class MobileCarousel {
             this.dots.push(dot);
         });
         document.body.appendChild(this.dotsContainer);
+    }
+
+    createCollapseBtn() {
+        this.collapseBtn = document.createElement('div');
+        this.collapseBtn.className = 'mobile-collapse-btn';
+        this.collapseBtn.innerHTML = '<span class="btn-icon">▲</span>收起';
+        this.collapseBtn.addEventListener('click', () => {
+            if (!this.isExpanded) return;
+            // 找到当前展开的面板并折叠
+            const expandedPanel = document.querySelector('.section-panel.expanded');
+            if (expandedPanel) {
+                expandedPanel.classList.remove('expanded');
+                expandedPanel.classList.add('collapsed');
+            }
+        });
+        document.body.appendChild(this.collapseBtn);
     }
 
     // 循环轮播布局
@@ -2004,6 +2021,8 @@ class MobileCarousel {
         section.classList.add('section-expanded');
         this.carousel.classList.add('has-expanded');
         if (this.dotsContainer) this.dotsContainer.style.display = 'none';
+        // 显示收起按钮
+        if (this.collapseBtn) this.collapseBtn.classList.add('visible');
         // 允许 body 滚动展开的内容
         document.body.style.overflow = '';
         document.body.style.position = '';
@@ -2022,6 +2041,8 @@ class MobileCarousel {
         });
         this.carousel.classList.remove('has-expanded');
         if (this.dotsContainer) this.dotsContainer.style.display = '';
+        // 隐藏收起按钮
+        if (this.collapseBtn) this.collapseBtn.classList.remove('visible');
         // 重新锁定 body 滚动
         document.body.style.overflow = 'hidden';
         document.body.style.position = 'fixed';
@@ -2034,6 +2055,7 @@ class MobileCarousel {
 
     destroy() {
         if (this.dotsContainer) this.dotsContainer.remove();
+        if (this.collapseBtn) this.collapseBtn.remove();
         this.visibleSections.forEach(s => {
             s.classList.remove('carousel-center', 'section-expanded');
             s.style.top = '';
